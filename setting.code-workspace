@@ -1,0 +1,114 @@
+{
+  "folders": [
+    {
+      "path": ".",
+    },
+  ],
+  "settings": {
+    "files.eol": "\n",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true,
+    "files.autoSave": "onFocusChange",
+
+    // ❌ 불필요한 파일 숨김
+    "files.exclude": {
+      ".yarn": true,
+      "build": true,
+      "dist": true,
+      "node_modules": true,
+      "styled-system": true,
+      "storybook-static": true,
+      "next-env.d.ts": true,
+      "postcss.config.cjs": true,
+      "sentry.edge.config.ts": true,
+      "sentry.server.config.ts": true,
+      "panda.config.ts": true,
+      "jest.setup.ts": true,
+      "jest.config.cjs": true,
+      "jest-result.json": false,
+      "next-sitemap.config.js": true,
+      "instrumentation-client.ts": true,
+      "debug-storybook.log": true,
+      "yarn.lock": true,
+      ".yarnrc.yml": true,
+      ".prettierrc": true,
+      ".prettierignore": true,
+      ".gitattributes": true,
+      ".gitignore": true,
+      "README.md": true,
+      ".next": false,
+      "src/instrumentation.ts": true,
+      "src/middleware.ts": true,
+      "eslint.config.mjs": true,
+    },
+
+    // ✨ TypeScript & JavaScript 자동 import 정리
+    "typescript.updateImportsOnFileMove.enabled": "always",
+    "javascript.updateImportsOnFileMove.enabled": "always",
+    "typescript.preferences.importModuleSpecifier": "non-relative",
+    "javascript.preferences.importModuleSpecifier": "non-relative",
+    "typescript.preferences.importModuleSpecifierEnding": "minimal",
+    "javascript.preferences.importModuleSpecifierEnding": "minimal",
+
+    // ✅ 코드 스타일 & 포맷터 설정
+    "editor.formatOnSave": true,
+    // 🚀 파일 저장 시 최적화
+    "editor.codeActionsOnSave": {
+      "source.fixAll": "explicit",
+      "source.organizeImports": "explicit",
+    },
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    // 🛠️ ESLint & TypeScript 유효성 검사
+    "eslint.enable": true,
+    "eslint.validate": ["javascript", "typescript", "typescriptreact"],
+    "eslint.workingDirectories": [{ "mode": "auto" }],
+
+    // 🚀 터미널 & Git 자동화
+    "git.autofetch": true,
+    "terminal.integrated.defaultProfile.windows": "Command Prompt",
+
+    // 🎨 UI & 탐색기
+    "workbench.iconTheme": "material-icon-theme",
+    "explorer.compactFolders": false,
+
+    // 🖋️ 글꼴 설정 (D2Coding 선호)
+    // "editor.fontFamily": "D2Coding, Consolas, 'Courier New', monospace",
+    "editor.wordWrap": "on",
+
+    // ✅ 성능 최적화
+    "typescript.tsserver.web.projectWideIntellisense.enabled": true,
+
+    // 🎯 TypeScript & JavaScript 향상된 코드 네비게이션
+    "typescript.suggest.autoImports": true,
+    "javascript.suggest.autoImports": true,
+    "typescript.enablePromptUseWorkspaceTsdk": true,
+
+    // 🔄 자동 리로드 관련 설정
+    "files.watcherExclude": {
+      ".git/objects/**": true,
+      ".git/subtree-cache/**": true,
+      "node_modules/**": true,
+      ".yarn/**": true,
+    },
+
+    // 🏎️ 편집기 성능 향상
+    "editor.renderWhitespace": "boundary", // 공백 렌더링 최소화
+    "editor.stickyScroll.enabled": true, // 함수/클래스 헤더 고정
+    "editor.smoothScrolling": true, // 부드러운 스크롤
+    "editor.guides.indentation": true, // 들여쓰기 가이드 활성화
+    "editor.cursorSmoothCaretAnimation": "on", // 커서 애니메이션 적용
+
+    // 🖌️ UI 관련 설정
+    "window.zoomLevel": 0, // 기본 UI 크기
+
+    // 📜 탐색기 & Git 관련 설정
+    "explorer.confirmDragAndDrop": false, // 파일 드래그 & 드롭 확인 비활성화
+    "git.confirmSync": false, // Git 동기화 확인 비활성화
+
+    // 💾 파일 관리 관련
+    "files.trimTrailingWhitespace": true, // 저장 시 끝 공백 제거
+    "files.trimFinalNewlines": true, // 저장 시 불필요한 줄 제거
+    "files.insertFinalNewline": true, // 저장 시 마지막 줄 추가
+    "editor.formatOnPaste": true, // 붙여넣기 시 자동 포맷팅
+  },
+}
