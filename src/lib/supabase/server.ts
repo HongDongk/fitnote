@@ -17,9 +17,7 @@ export async function createClient() {
             cookiesToSet.forEach(({ name, value, options }) => {
               cookieStore.set(name, value, options);
             });
-          } catch {
-            // Server Component에서는 쿠키를 직접 수정할 수 없습니다.
-          }
+          } catch {}
         },
       },
     },

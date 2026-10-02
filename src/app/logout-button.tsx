@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { Alert, Button, CircularProgress, Stack } from "@mui/material";
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
 import { createClient } from "@/src/lib/supabase/client";
 
@@ -27,11 +29,26 @@ export function LogoutButton() {
   }
 
   return (
-    <>
-      <button type="button" onClick={signOut} disabled={isLoading}>
-        {isLoading ? "로그아웃 중..." : "로그아웃"}
-      </button>
-      {errorMessage && <p>{errorMessage}</p>}
-    </>
+    <Stack spacing={1} sx={{ alignItems: "flex-end" }}>
+      <Button
+        type="button"
+        color="inherit"
+        variant="outlined"
+        size="small"
+        onClick={signOut}
+        disabled={isLoading}
+        startIcon={
+          isLoading ? (
+            <CircularProgress size={16} color="inherit" />
+          ) : (
+            <LogoutRoundedIcon />
+          )
+        }
+        sx={{ borderColor: "rgba(255,255,255,0.55)", minHeight: 40 }}
+      >
+        {isLoading ? "로그아웃 중" : "로그아웃"}
+      </Button>
+      {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+    </Stack>
   );
 }

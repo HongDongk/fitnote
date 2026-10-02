@@ -1,8 +1,22 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, SyntheticEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
+import {
+  Alert,
+  Box,
+  Button,
+  CircularProgress,
+  InputAdornment,
+  Stack,
+  Tab,
+  Tabs,
+  TextField,
+} from "@mui/material";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 
 import { createClient } from "@/src/lib/supabase/client";
 
@@ -29,6 +43,14 @@ export function EmailAuthForm() {
   const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  function handleModeChange(
+    _event: SyntheticEvent,
+    nextMode: "sign-in" | "sign-up",
+  ) {
+    setMode(nextMode);
+    setMessage("");
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -98,47 +120,95 @@ export function EmailAuthForm() {
   }
 
   return (
-    <section>
-      <div>
-        <button type="button" onClick={() => setMode("sign-in")}>
-          로그인
-        </button>
-        <button type="button" onClick={() => setMode("sign-up")}>
-          회원가입
-        </button>
-      </div>
+    <Box component="section">
+      <Tabs
+        value={mode}
+        onChange={handleModeChange}
+        aria-label="인증 방식 선택"
+        variant="fullWidth"
+        sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
+      >
+        <Tab value="sign-in" label="로그인" />
+        <Tab value="sign-up" label="회원가입" />
+      </Tabs>
 
-      <form onSubmit={handleSubmit}>
+      <Stack component="form" spacing={2.25} onSubmit={handleSubmit}>
         {mode === "sign-up" && (
-          <label>
-            이름
-            <input name="displayName" required maxLength={50} />
-          </label>
-        )}
-        <label>
-          이메일
-          <input name="email" type="email" required autoComplete="email" />
-        </label>
-        <label>
-          비밀번호
-          <input
-            name="password"
-            type="password"
+          <TextField
+            name="displayName"
+            label="이름"
+            placeholder="홍길동"
             required
-            minLength={6}
-            autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+            slotProps={{
+              htmlInput: { maxLength: 50 },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <PersonOutlineRoundedIcon color="action" />
+                  </InputAdornment>
+                ),
+              },
+            }}
           />
-        </label>
-        <button type="submit" disabled={isLoading}>
-          {isLoading
-            ? "처리 중..."
-            : mode === "sign-up"
-              ? "회원가입"
-              : "로그인"}
-        </button>
-      </form>
+        )}
+        <TextField
+          name="email"
+          label="이메일"
+          type="email"
+          placeholder="name@example.com"
+          required
+          autoComplete="email"
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <EmailOutlinedIcon color="action" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <TextField
+          name="password"
+          label="비밀번호"
+          type="password"
+          required
+          autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+          helperText={mode === "sign-up" ? "6자 이상 입력해주세요." : undefined}
+          slotProps={{
+            htmlInput: { minLength: 6 },
+            input: {
+              startAdornment: (
+                <InputAdornment position="start">
+                  <LockOutlinedIcon color="action" />
+                </InputAdornment>
+              ),
+            },
+          }}
+        />
+        <Button
+          type="submit"
+          variant="contained"
+          size="large"
+          disabled={isLoading}
+          aria-busy={isLoading}
+          aria-label={isLoading ? "처리 중" : undefined}
+        >
+          {isLoading ? (
+            <CircularProgress size={22} color="inherit" aria-hidden="true" />
+          ) : mode === "sign-up" ? (
+            "무료로 시작하기"
+          ) : (
+            "로그인"
+          )}
+        </Button>
 
-      {message && <p>{message}</p>}
-    </section>
+        {message && (
+          <Alert severity={message.startsWith("인증 메일") ? "success" : "error"}>
+            {message}
+          </Alert>
+        )}
+      </Stack>
+    </Box>
   );
 }

@@ -48,5 +48,5 @@ next-env.d.ts
 .codex
 .mcp.json
 skills-lock.json
-graphify-out
+/graphify-out
 /plans/
