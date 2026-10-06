@@ -1,4 +1,5 @@
 import type { AuthError, Session, User } from "@supabase/supabase-js";
+import { z } from "zod";
 
 export type AuthMode = "sign-in" | "sign-up";
 export type FieldName =
@@ -7,6 +8,37 @@ export type FieldName =
   | "password"
   | "passwordConfirm";
 export type FieldErrors = Partial<Record<FieldName, string>>;
+
+export const signInSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, "이메일을 입력해주세요.")
+    .pipe(z.email({ error: "올바른 이메일 주소를 입력해주세요." })),
+  password: z.string().min(1, "비밀번호를 입력해주세요."),
+});
+
+export const signUpSchema = signInSchema
+  .extend({
+    displayName: z
+      .string()
+      .trim()
+      .min(1, "이름을 입력해주세요.")
+      .max(50, "이름은 50자 이하로 입력해주세요."),
+    password: z
+      .string()
+      .min(1, "비밀번호를 입력해주세요.")
+      .min(6, "비밀번호는 6자 이상 입력해주세요."),
+    passwordConfirm: z.string().min(1, "비밀번호를 다시 입력해주세요."),
+  })
+  .refine(
+    ({ password, passwordConfirm }) =>
+      !passwordConfirm || password === passwordConfirm,
+    {
+      message: "비밀번호가 일치하지 않습니다.",
+      path: ["passwordConfirm"],
+    },
+  );
 
 export const authFormMessages = {
   duplicateSignup: "이미 가입된 이메일입니다. 로그인해주세요.",
@@ -39,31 +71,15 @@ export function validateAuthForm(
   mode: AuthMode,
   values: Record<FieldName, string>,
 ): FieldErrors {
-  const { displayName, email, password, passwordConfirm } = values;
+  const schema = mode === "sign-up" ? signUpSchema : signInSchema;
+  const result = schema.safeParse(values);
   const errors: FieldErrors = {};
-
-  if (mode === "sign-up") {
-    if (!displayName.trim()) {
-      errors.displayName = "이름을 입력해주세요.";
-    } else if (displayName.trim().length > 50) {
-      errors.displayName = "이름은 50자 이하로 입력해주세요.";
-    }
-  }
-  if (!email.trim()) {
-    errors.email = "이메일을 입력해주세요.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-    errors.email = "올바른 이메일 주소를 입력해주세요.";
-  }
-  if (!password) {
-    errors.password = "비밀번호를 입력해주세요.";
-  } else if (mode === "sign-up" && password.length < 6) {
-    errors.password = "비밀번호는 6자 이상 입력해주세요.";
-  }
-  if (mode === "sign-up") {
-    if (!passwordConfirm) {
-      errors.passwordConfirm = "비밀번호를 다시 입력해주세요.";
-    } else if (password !== passwordConfirm) {
-      errors.passwordConfirm = "비밀번호가 일치하지 않습니다.";
+  if (!result.success) {
+    for (const issue of result.error.issues) {
+      const field = issue.path[0] as FieldName;
+      if (!errors[field]) {
+        errors[field] = issue.message;
+      }
     }
   }
 

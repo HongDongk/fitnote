@@ -31,7 +31,7 @@ import {
   type AuthMode,
   type FieldErrors,
   type FieldName,
-} from "../lib/auth-form-errors";
+} from "../../../lib/schemas/authSchemas";
 
 async function ensureProfile(supabase: SupabaseClient, user: User) {
   const displayName =
