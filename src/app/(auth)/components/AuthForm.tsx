@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type SubmitEvent } from "react";
 
 import { createClient } from "@/src/lib/supabase/client";
+import type { Database } from "@/src/lib/supabase/database.types";
 
 import {
   authFormMessages,
@@ -33,7 +34,7 @@ import {
   type FieldName,
 } from "../../../lib/schemas/authSchemas";
 
-async function ensureProfile(supabase: SupabaseClient, user: User) {
+async function ensureProfile(supabase: SupabaseClient<Database>, user: User) {
   const displayName =
     typeof user.user_metadata.display_name === "string"
       ? user.user_metadata.display_name.trim().slice(0, 50)
