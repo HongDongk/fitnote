@@ -13,27 +13,34 @@ export function LogoutButton() {
   const [errorMessage, setErrorMessage] = useState("");
 
   async function signOut() {
-    setIsLoading(true);
-    setErrorMessage("");
-    const supabase = createClient();
-    const { error } = await supabase.auth.signOut();
-
-    if (error) {
-      setErrorMessage("로그아웃에 실패했습니다.");
-      setIsLoading(false);
+    if (isLoading) {
       return;
     }
+    setIsLoading(true);
+    setErrorMessage("");
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
 
-    router.push("/");
-    router.refresh();
+      if (error) {
+        setErrorMessage("로그아웃에 실패했습니다. 다시 시도해주세요.");
+        return;
+      }
+
+      router.push("/");
+      router.refresh();
+    } catch {
+      setErrorMessage("로그아웃에 실패했습니다. 인터넷 연결을 확인해주세요.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   return (
     <Stack spacing={1} sx={{ alignItems: "flex-end" }}>
       <Button
         type="button"
-        color="inherit"
-        variant="outlined"
+        variant="text"
         size="small"
         onClick={signOut}
         disabled={isLoading}
@@ -44,7 +51,19 @@ export function LogoutButton() {
             <LogoutRoundedIcon />
           )
         }
-        sx={{ borderColor: "rgba(255,255,255,0.55)", minHeight: 40 }}
+        sx={{
+          color: "primary.dark",
+          px: 2.5,
+          minHeight: 40,
+          borderRadius: "10px",
+          bgcolor: "#e7f3ec",
+          fontWeight: 700,
+          transition: "background-color 160ms ease",
+          "&.Mui-focusVisible": {
+            outline: "2px solid #276749",
+            outlineOffset: 3,
+          },
+        }}
       >
         {isLoading ? "로그아웃 중" : "로그아웃"}
       </Button>

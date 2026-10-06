@@ -1,3 +1,4 @@
+import { createClient } from "@/src/lib/supabase/server";
 import {
   Avatar,
   Box,
@@ -8,10 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import { redirect } from "next/navigation";
-
-import { createClient } from "@/src/lib/supabase/server";
-
-import { LogoutButton } from "./components/logout-button";
+import Header from "@/src/app/components/Header";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -34,21 +32,7 @@ export default async function DashboardPage() {
       component="main"
       sx={{ minHeight: "100dvh", bgcolor: "background.default" }}
     >
-      <Box
-        sx={{ bgcolor: "primary.main", color: "primary.contrastText", py: 2 }}
-      >
-        <Container maxWidth="md">
-          <Stack
-            direction="row"
-            sx={{ alignItems: "center", justifyContent: "space-between" }}
-          >
-            <Typography variant="h6" sx={{ fontWeight: 800 }}>
-              핏노트
-            </Typography>
-            <LogoutButton />
-          </Stack>
-        </Container>
-      </Box>
+      <Header />
 
       <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
         <Stack spacing={3}>

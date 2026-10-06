@@ -1,7 +1,15 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import Image from "next/image";
 
-export default function Header() {
+import { createClient } from "@/src/lib/supabase/server";
+import { LogoutButton } from "./LogoutButton";
+
+export default async function Header() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <Box
       component="header"
@@ -38,26 +46,30 @@ export default function Header() {
               핏노트
             </Typography>
           </Stack>
-          <Button
-            href="/login"
-            variant="text"
-            size="small"
-            style={{ color: "#1d4d38" }}
-            sx={{
-              px: 2.5,
-              minHeight: 40,
-              borderRadius: "10px",
-              bgcolor: "#e7f3ec",
-              fontWeight: 700,
-              transition: "background-color 160ms ease",
-              "&.Mui-focusVisible": {
-                outline: "2px solid #276749",
-                outlineOffset: 3,
-              },
-            }}
-          >
-            로그인
-          </Button>
+          {user ? (
+            <LogoutButton />
+          ) : (
+            <Button
+              href="/login"
+              variant="text"
+              size="small"
+              style={{ color: "#1d4d38" }}
+              sx={{
+                px: 2.5,
+                minHeight: 40,
+                borderRadius: "10px",
+                bgcolor: "#e7f3ec",
+                fontWeight: 700,
+                transition: "background-color 160ms ease",
+                "&.Mui-focusVisible": {
+                  outline: "2px solid #276749",
+                  outlineOffset: 3,
+                },
+              }}
+            >
+              로그인
+            </Button>
+          )}
         </Stack>
       </Container>
     </Box>
