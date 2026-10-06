@@ -7,15 +7,22 @@ Next.js, React, MUI, Supabase, Zod를 사용합니다.
 
 ## 1. 최초 설치
 
-Node.js 20.9 이상과 npm이 필요합니다.
+Node.js 22 이상과 npm이 필요합니다. 기존 Node 20 환경에서는 먼저 Node를 업데이트하세요.
 
 ```bash
 node --version
 npm --version
-npm ci --legacy-peer-deps
+npm ci
 ```
 
-현재 `@supabase/ssr`의 peer dependency 요구 버전과 설치된 `@supabase/supabase-js` 버전이 달라 `--legacy-peer-deps`를 사용합니다. 이 옵션은 충돌 검사를 우회할 뿐 호환 문제 자체를 해결하지는 않습니다.
+Supabase 패키지의 호환 버전을 맞췄으므로 `--legacy-peer-deps` 옵션은 필요하지 않습니다.
+
+이미 nvm을 사용하는 환경이라면 다음 명령으로 Node 22를 설치·선택할 수 있습니다.
+
+```bash
+nvm install 22
+nvm use 22
+```
 
 ## 2. 환경변수 설정
 
@@ -136,7 +143,7 @@ npx tsc --noEmit
 환경변수 설정이 완료된 새 체크아웃:
 
 ```bash
-npm ci --legacy-peer-deps
+npm ci
 npm run dev
 ```
 
