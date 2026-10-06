@@ -1,6 +1,7 @@
 import { createClient } from "@/src/lib/supabase/server";
 import {
   Avatar,
+  Alert,
   Box,
   Container,
   Divider,
@@ -10,6 +11,7 @@ import {
 } from "@mui/material";
 import { redirect } from "next/navigation";
 import Header from "@/src/app/components/Header";
+import { ProfileCompletionForm } from "./components/ProfileCompletionForm";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -21,11 +23,30 @@ export default async function DashboardPage() {
     redirect("/");
   }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from("profiles")
-    .select("display_name, slug, avatar_url")
+    .select("display_name, slug, bio, avatar_url")
     .eq("id", user.id)
     .single();
+
+  if (profile && (!profile.bio?.trim() || !profile.avatar_url?.trim())) {
+    return (
+      <Box sx={{ minHeight: "100dvh", bgcolor: "background.default" }}>
+        <Header />
+        <Container
+          component="main"
+          maxWidth="sm"
+          sx={{ py: { xs: 4, sm: 7 } }}
+        >
+          <ProfileCompletionForm
+            userId={user.id}
+            bio={profile.bio}
+            avatarUrl={profile.avatar_url}
+          />
+        </Container>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -44,6 +65,12 @@ export default async function DashboardPage() {
               핏노트 운영을 위한 기본 계정이 준비되었습니다.
             </Typography>
           </Box>
+
+          {profileError || !profile ? (
+            <Alert severity="error">
+              프로필을 불러오지 못했습니다. 페이지를 새로고침해주세요.
+            </Alert>
+          ) : null}
 
           <Paper
             elevation={0}
@@ -77,6 +104,26 @@ export default async function DashboardPage() {
             <Divider />
 
             <Stack component="dl" spacing={2.5} sx={{ mt: 3, m: 0 }}>
+              <Box>
+                <Typography
+                  component="dt"
+                  variant="caption"
+                  color="text.secondary"
+                >
+                  소개글
+                </Typography>
+                <Typography
+                  component="dd"
+                  sx={{
+                    m: 0,
+                    mt: 0.5,
+                    whiteSpace: "pre-wrap",
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {profile?.bio || "소개글을 추가해주세요."}
+                </Typography>
+              </Box>
               <Box>
                 <Typography
                   component="dt"
