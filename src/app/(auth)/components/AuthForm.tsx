@@ -4,19 +4,34 @@ import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import {
-  Alert,
   Box,
   Button,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   InputAdornment,
   Stack,
   TextField,
+  Typography,
 } from "@mui/material";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { FormEvent, useState } from "react";
+import { useEffect, useState, type SubmitEvent } from "react";
 
 import { createClient } from "@/src/lib/supabase/client";
+
+import {
+  authFormMessages,
+  getAuthErrorMessage,
+  getSignupResponseError,
+  validateAuthForm,
+  type AuthMode,
+  type FieldErrors,
+  type FieldName,
+} from "../lib/auth-form-errors";
 
 async function ensureProfile(supabase: SupabaseClient, user: User) {
   const displayName =
@@ -36,18 +51,42 @@ async function ensureProfile(supabase: SupabaseClient, user: User) {
   return error;
 }
 
-export function AuthForm({
-  mode = "sign-in",
-}: {
-  mode?: "sign-in" | "sign-up";
-}) {
+export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isLoading, setIsLoading] = useState(false);
+  const [verificationEmail, setVerificationEmail] = useState("");
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (!verificationEmail) {
+      return;
+    }
+
+    function checkVerification() {
+      router.refresh();
+    }
+
+    window.addEventListener("focus", checkVerification);
+    return () => window.removeEventListener("focus", checkVerification);
+  }, [router, verificationEmail]);
+
+  function clearFieldError(field: FieldName) {
+    setFieldErrors((previous) => ({
+      ...previous,
+      [field]: undefined,
+      ...(field === "password" ? { passwordConfirm: undefined } : {}),
+    }));
+    setMessage("");
+  }
+
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    setIsLoading(true);
+    if (isLoading) {
+      return;
+    }
+
+    const form = event.currentTarget;
     setMessage("");
 
     const formData = new FormData(event.currentTarget);
@@ -55,86 +94,131 @@ export function AuthForm({
     const password = String(formData.get("password"));
     const displayName = String(formData.get("displayName") ?? "").trim();
 
-    if (mode === "sign-up") {
-      if (!displayName) {
-        setMessage("이름을 입력해주세요.");
-        setIsLoading(false);
-        return;
-      }
-      if (password !== String(formData.get("passwordConfirm"))) {
-        setMessage("비밀번호가 일치하지 않습니다.");
-        setIsLoading(false);
-        return;
-      }
+    const errors = validateAuthForm(mode, {
+      displayName,
+      email,
+      password,
+      passwordConfirm: String(formData.get("passwordConfirm") ?? ""),
+    });
+    setFieldErrors(errors);
+    const firstInvalidField = (
+      ["displayName", "email", "password", "passwordConfirm"] as const
+    ).find((field) => errors[field]);
+    if (firstInvalidField) {
+      form
+        .querySelector<HTMLInputElement>(`input[name="${firstInvalidField}"]`)
+        ?.focus();
+      return;
     }
 
-    const supabase = createClient();
+    setIsLoading(true);
+    try {
+      const supabase = createClient();
 
-    if (mode === "sign-up") {
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: { display_name: displayName },
-        },
-      });
+      if (mode === "sign-up") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/auth/callback`,
+            data: { display_name: displayName },
+          },
+        });
 
-      if (error) {
-        setMessage(error.message);
-        setIsLoading(false);
-        return;
+        if (error) {
+          setMessage(getAuthErrorMessage(error));
+          return;
+        }
+
+        const signupResponseError = getSignupResponseError(data);
+        if (signupResponseError) {
+          setMessage(signupResponseError);
+          return;
+        }
+
+        if (!data.session) {
+          setVerificationEmail(email);
+          return;
+        }
+
+        const profileError = data.user
+          ? await ensureProfile(supabase, data.user)
+          : null;
+
+        if (profileError) {
+          setMessage(authFormMessages.signupProfileError);
+          return;
+        }
+      } else {
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) {
+          setMessage(getAuthErrorMessage(error));
+          return;
+        }
+
+        const profileError = await ensureProfile(supabase, data.user);
+
+        if (profileError) {
+          setMessage(authFormMessages.signinProfileError);
+          return;
+        }
       }
 
-      if (!data.session) {
-        setMessage("인증 메일을 보냈습니다. 메일의 확인 링크를 눌러주세요.");
-        setIsLoading(false);
-        return;
-      }
-
-      const profileError = data.user
-        ? await ensureProfile(supabase, data.user)
-        : null;
-
-      if (profileError) {
-        setMessage("프로필 생성에 실패했습니다.");
-        setIsLoading(false);
-        return;
-      }
-    } else {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) {
-        setMessage(error.message);
-        setIsLoading(false);
-        return;
-      }
-
-      const profileError = await ensureProfile(supabase, data.user);
-
-      if (profileError) {
-        setMessage("프로필 생성에 실패했습니다.");
-        setIsLoading(false);
-        return;
-      }
+      router.push("/dashboard");
+      router.refresh();
+    } catch {
+      setMessage(authFormMessages.unexpectedError);
+    } finally {
+      setIsLoading(false);
     }
+  }
 
-    router.push("/dashboard");
-    router.refresh();
+  if (verificationEmail) {
+    return (
+      <Stack
+        spacing={2}
+        role="status"
+        sx={{ alignItems: "center", textAlign: "center", py: 2 }}
+      >
+        <EmailOutlinedIcon color="primary" sx={{ fontSize: 48 }} />
+        <Typography component="h2" variant="h6" sx={{ fontWeight: 700 }}>
+          이메일 인증을 완료해주세요
+        </Typography>
+        <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>
+          {verificationEmail}
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          위 주소로 인증 메일을 보냈습니다.
+          <br />
+          메일의 인증 링크를 눌러 가입을 완료해주세요.
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          메일이 보이지 않으면 스팸함도 확인해주세요.
+          <br />
+          가입한 브라우저에서 인증 링크를 열어주세요.
+        </Typography>
+      </Stack>
+    );
   }
 
   return (
     <Box component="section">
       <Stack
         component="form"
-        spacing={3}
+        noValidate
+        spacing={1}
         onSubmit={handleSubmit}
         sx={{
           "& .MuiOutlinedInput-root": {
             minHeight: 56,
+          },
+          "& .MuiFormHelperText-root": {
+            minHeight: 23,
+            lineHeight: "20px",
           },
         }}
       >
@@ -145,6 +229,10 @@ export function AuthForm({
             placeholder="홍길동"
             required
             autoComplete="name"
+            disabled={isLoading}
+            error={Boolean(fieldErrors.displayName)}
+            helperText={fieldErrors.displayName || " "}
+            onChange={() => clearFieldError("displayName")}
             slotProps={{
               htmlInput: { maxLength: 50 },
               input: {
@@ -164,6 +252,10 @@ export function AuthForm({
           placeholder="name@example.com"
           required
           autoComplete="email"
+          disabled={isLoading}
+          error={Boolean(fieldErrors.email)}
+          helperText={fieldErrors.email || " "}
+          onChange={() => clearFieldError("email")}
           slotProps={{
             input: {
               startAdornment: (
@@ -182,7 +274,13 @@ export function AuthForm({
           autoComplete={
             mode === "sign-up" ? "new-password" : "current-password"
           }
-          helperText={mode === "sign-up" ? "6자 이상 입력해주세요." : undefined}
+          disabled={isLoading}
+          error={Boolean(fieldErrors.password)}
+          onChange={() => clearFieldError("password")}
+          helperText={
+            fieldErrors.password ||
+            (mode === "sign-up" ? "6자 이상 입력해주세요." : " ")
+          }
           slotProps={{
             htmlInput: { minLength: 6 },
             input: {
@@ -201,6 +299,10 @@ export function AuthForm({
             type="password"
             required
             autoComplete="new-password"
+            disabled={isLoading}
+            error={Boolean(fieldErrors.passwordConfirm)}
+            helperText={fieldErrors.passwordConfirm || " "}
+            onChange={() => clearFieldError("passwordConfirm")}
             slotProps={{
               htmlInput: { minLength: 6 },
               input: {
@@ -230,15 +332,31 @@ export function AuthForm({
             "로그인"
           )}
         </Button>
-
-        {message && (
-          <Alert
-            severity={message.startsWith("인증 메일") ? "success" : "error"}
-          >
-            {message}
-          </Alert>
-        )}
       </Stack>
+      <Dialog
+        open={Boolean(message)}
+        onClose={() => setMessage("")}
+        aria-labelledby="auth-error-title"
+        aria-describedby="auth-error-description"
+        fullWidth
+        maxWidth="xs"
+      >
+        <DialogTitle id="auth-error-title">
+          {mode === "sign-up"
+            ? "회원가입을 완료하지 못했어요"
+            : "로그인에 실패했어요"}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="auth-error-description">
+            {message}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 3 }}>
+          <Button variant="contained" onClick={() => setMessage("")} autoFocus>
+            확인
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 }

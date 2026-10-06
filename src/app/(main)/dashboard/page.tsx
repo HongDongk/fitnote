@@ -1,8 +1,6 @@
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import {
   Avatar,
   Box,
-  Chip,
   Container,
   Divider,
   Paper,
@@ -55,13 +53,6 @@ export default async function DashboardPage() {
       <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
         <Stack spacing={3}>
           <Box>
-            <Chip
-              icon={<CheckCircleRoundedIcon />}
-              label="로그인 완료"
-              color="primary"
-              variant="outlined"
-              sx={{ mb: 1.5, bgcolor: "primary.light" }}
-            />
             <Typography component="h1" variant="h4">
               반가워요, {profile?.display_name ?? "강사"}님
             </Typography>

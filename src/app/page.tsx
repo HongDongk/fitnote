@@ -278,7 +278,7 @@ export default function HomePage() {
                 PT, 필라테스, 음악, 댄스까지. 당신의 수업을 위한 작은 시작.
               </Typography>
               <Button
-                href="/login"
+                href="/signup"
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardRoundedIcon />}
