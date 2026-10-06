@@ -50,7 +50,6 @@ export default function Header() {
               bgcolor: "#e7f3ec",
               fontWeight: 700,
               transition: "background-color 160ms ease",
-              "&:hover": { bgcolor: "#d8eadd" },
               "&.Mui-focusVisible": {
                 outline: "2px solid #276749",
                 outlineOffset: 3,

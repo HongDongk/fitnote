@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 function getDisplayName(metadata: Record<string, unknown>) {
   const candidates = [
+    metadata.display_name,
     metadata.name,
     metadata.nickname,
     metadata.full_name,
@@ -26,14 +27,18 @@ export async function GET(request: Request) {
   const code = requestUrl.searchParams.get("code");
 
   if (!code) {
-    return NextResponse.redirect(new URL("/?error=auth", requestUrl.origin));
+    return NextResponse.redirect(
+      new URL("/login?error=auth", requestUrl.origin),
+    );
   }
 
   const supabase = await createClient();
   const { error: authError } = await supabase.auth.exchangeCodeForSession(code);
 
   if (authError) {
-    return NextResponse.redirect(new URL("/?error=auth", requestUrl.origin));
+    return NextResponse.redirect(
+      new URL("/login?error=auth", requestUrl.origin),
+    );
   }
 
   const {
@@ -41,7 +46,9 @@ export async function GET(request: Request) {
   } = await supabase.auth.getUser();
 
   if (!user) {
-    return NextResponse.redirect(new URL("/?error=auth", requestUrl.origin));
+    return NextResponse.redirect(
+      new URL("/login?error=auth", requestUrl.origin),
+    );
   }
 
   const { data: profile, error: profileReadError } = await supabase
@@ -52,7 +59,9 @@ export async function GET(request: Request) {
 
   if (profileReadError) {
     await supabase.auth.signOut();
-    return NextResponse.redirect(new URL("/?error=profile", requestUrl.origin));
+    return NextResponse.redirect(
+      new URL("/login?error=profile", requestUrl.origin),
+    );
   }
 
   if (!profile) {
@@ -81,7 +90,7 @@ export async function GET(request: Request) {
     if (profileCreateError) {
       await supabase.auth.signOut();
       return NextResponse.redirect(
-        new URL("/?error=profile", requestUrl.origin),
+        new URL("/login?error=profile", requestUrl.origin),
       );
     }
   }

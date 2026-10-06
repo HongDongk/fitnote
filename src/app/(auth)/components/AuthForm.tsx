@@ -10,13 +10,11 @@ import {
   CircularProgress,
   InputAdornment,
   Stack,
-  Tab,
-  Tabs,
   TextField,
 } from "@mui/material";
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { FormEvent, SyntheticEvent, useState } from "react";
+import { FormEvent, useState } from "react";
 
 import { createClient } from "@/src/lib/supabase/client";
 
@@ -38,19 +36,14 @@ async function ensureProfile(supabase: SupabaseClient, user: User) {
   return error;
 }
 
-export function EmailAuthForm() {
+export function AuthForm({
+  mode = "sign-in",
+}: {
+  mode?: "sign-in" | "sign-up";
+}) {
   const router = useRouter();
-  const [mode, setMode] = useState<"sign-in" | "sign-up">("sign-in");
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-
-  function handleModeChange(
-    _event: SyntheticEvent,
-    nextMode: "sign-in" | "sign-up",
-  ) {
-    setMode(nextMode);
-    setMessage("");
-  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,9 +51,23 @@ export function EmailAuthForm() {
     setMessage("");
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email"));
+    const email = String(formData.get("email")).trim();
     const password = String(formData.get("password"));
     const displayName = String(formData.get("displayName") ?? "").trim();
+
+    if (mode === "sign-up") {
+      if (!displayName) {
+        setMessage("이름을 입력해주세요.");
+        setIsLoading(false);
+        return;
+      }
+      if (password !== String(formData.get("passwordConfirm"))) {
+        setMessage("비밀번호가 일치하지 않습니다.");
+        setIsLoading(false);
+        return;
+      }
+    }
+
     const supabase = createClient();
 
     if (mode === "sign-up") {
@@ -121,24 +128,23 @@ export function EmailAuthForm() {
 
   return (
     <Box component="section">
-      <Tabs
-        value={mode}
-        onChange={handleModeChange}
-        aria-label="인증 방식 선택"
-        variant="fullWidth"
-        sx={{ mb: 3, borderBottom: 1, borderColor: "divider" }}
+      <Stack
+        component="form"
+        spacing={3}
+        onSubmit={handleSubmit}
+        sx={{
+          "& .MuiOutlinedInput-root": {
+            minHeight: 56,
+          },
+        }}
       >
-        <Tab value="sign-in" label="로그인" />
-        <Tab value="sign-up" label="회원가입" />
-      </Tabs>
-
-      <Stack component="form" spacing={2.25} onSubmit={handleSubmit}>
         {mode === "sign-up" && (
           <TextField
             name="displayName"
             label="이름"
             placeholder="홍길동"
             required
+            autoComplete="name"
             slotProps={{
               htmlInput: { maxLength: 50 },
               input: {
@@ -188,6 +194,25 @@ export function EmailAuthForm() {
             },
           }}
         />
+        {mode === "sign-up" && (
+          <TextField
+            name="passwordConfirm"
+            label="비밀번호 확인"
+            type="password"
+            required
+            autoComplete="new-password"
+            slotProps={{
+              htmlInput: { minLength: 6 },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <LockOutlinedIcon color="action" />
+                  </InputAdornment>
+                ),
+              },
+            }}
+          />
+        )}
         <Button
           type="submit"
           variant="contained"
@@ -195,11 +220,12 @@ export function EmailAuthForm() {
           disabled={isLoading}
           aria-busy={isLoading}
           aria-label={isLoading ? "처리 중" : undefined}
+          sx={{ mt: 1, py: 1.5, borderRadius: 2 }}
         >
           {isLoading ? (
             <CircularProgress size={22} color="inherit" aria-hidden="true" />
           ) : mode === "sign-up" ? (
-            "무료로 시작하기"
+            "회원가입"
           ) : (
             "로그인"
           )}

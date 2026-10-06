@@ -12,21 +12,15 @@ import Image from "next/image";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/src/lib/supabase/server";
-
 import { AuthForm } from "../components/AuthForm";
 
-type LoginProps = {
-  searchParams: Promise<{ error?: string }>;
-};
-
-export default async function LoginPage({ searchParams }: LoginProps) {
-  const { error } = await searchParams;
+export default async function SignupPage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user && !error) {
+  if (user) {
     redirect("/dashboard");
   }
 
@@ -79,48 +73,29 @@ export default async function LoginPage({ searchParams }: LoginProps) {
                 </Typography>
               </Stack>
               <Typography component="h1" variant="h4">
-                다시 만나서 반가워요 :)
+                핏노트 시작하기
               </Typography>
               <Typography color="text.secondary">
-                이메일과 비밀번호로 로그인하세요.
+                계정을 만들고 나만의 수업 관리를 시작하세요.
               </Typography>
             </Stack>
 
-            <AuthForm mode="sign-in" />
+            <AuthForm mode="sign-up" />
 
             <Typography
               variant="body2"
               color="text.secondary"
               sx={{ textAlign: "center" }}
             >
-              아직 회원이 아니신가요?{" "}
+              이미 회원이신가요?{" "}
               <Link
-                href="/signup"
+                href="/login"
                 style={{ color: "#276749" }}
                 sx={{ ml: 1, fontWeight: 700 }}
               >
-                회원가입
+                로그인
               </Link>
             </Typography>
-
-            {error === "auth" && (
-              <Typography
-                color="error"
-                role="alert"
-                sx={{ textAlign: "center" }}
-              >
-                이메일 인증에 실패했습니다.
-              </Typography>
-            )}
-            {error === "profile" && (
-              <Typography
-                color="error"
-                role="alert"
-                sx={{ textAlign: "center" }}
-              >
-                프로필 생성에 실패했습니다.
-              </Typography>
-            )}
           </Stack>
         </Paper>
         <Typography
@@ -128,7 +103,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
           color="text.secondary"
           sx={{ mt: 2.5, display: "block", textAlign: "center" }}
         >
-          1인 강사와 소규모 스튜디오를 위한 간편한 시작
+          가입 후 이메일의 인증 링크를 확인해주세요.
         </Typography>
       </Container>
     </Box>
