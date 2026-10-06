@@ -1,8 +1,8 @@
 "use client";
 
-import { FormEvent, SyntheticEvent, useState } from "react";
-import { useRouter } from "next/navigation";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
 import {
   Alert,
   Box,
@@ -14,9 +14,9 @@ import {
   Tabs,
   TextField,
 } from "@mui/material";
-import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import PersonOutlineRoundedIcon from "@mui/icons-material/PersonOutlineRounded";
+import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
+import { FormEvent, SyntheticEvent, useState } from "react";
 
 import { createClient } from "@/src/lib/supabase/client";
 
@@ -173,7 +173,9 @@ export function EmailAuthForm() {
           label="비밀번호"
           type="password"
           required
-          autoComplete={mode === "sign-up" ? "new-password" : "current-password"}
+          autoComplete={
+            mode === "sign-up" ? "new-password" : "current-password"
+          }
           helperText={mode === "sign-up" ? "6자 이상 입력해주세요." : undefined}
           slotProps={{
             htmlInput: { minLength: 6 },
@@ -204,7 +206,9 @@ export function EmailAuthForm() {
         </Button>
 
         {message && (
-          <Alert severity={message.startsWith("인증 메일") ? "success" : "error"}>
+          <Alert
+            severity={message.startsWith("인증 메일") ? "success" : "error"}
+          >
             {message}
           </Alert>
         )}

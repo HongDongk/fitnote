@@ -1,4 +1,4 @@
-import { redirect } from "next/navigation";
+import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import {
   Avatar,
   Box,
@@ -9,11 +9,11 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
+import { redirect } from "next/navigation";
 
 import { createClient } from "@/src/lib/supabase/server";
 
-import { LogoutButton } from "../logout-button";
+import { LogoutButton } from "./components/logout-button";
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -32,10 +32,18 @@ export default async function DashboardPage() {
     .single();
 
   return (
-    <Box component="main" sx={{ minHeight: "100dvh", bgcolor: "background.default" }}>
-      <Box sx={{ bgcolor: "primary.main", color: "primary.contrastText", py: 2 }}>
+    <Box
+      component="main"
+      sx={{ minHeight: "100dvh", bgcolor: "background.default" }}
+    >
+      <Box
+        sx={{ bgcolor: "primary.main", color: "primary.contrastText", py: 2 }}
+      >
         <Container maxWidth="md">
-          <Stack direction="row" sx={{ alignItems: "center", justifyContent: "space-between" }}>
+          <Stack
+            direction="row"
+            sx={{ alignItems: "center", justifyContent: "space-between" }}
+          >
             <Typography variant="h6" sx={{ fontWeight: 800 }}>
               핏노트
             </Typography>
@@ -62,9 +70,23 @@ export default async function DashboardPage() {
             </Typography>
           </Box>
 
-          <Paper elevation={0} sx={{ p: { xs: 3, sm: 4 }, border: "1px solid", borderColor: "divider" }}>
-            <Stack direction="row" spacing={2} sx={{ mb: 3, alignItems: "center" }}>
-              <Avatar src={profile?.avatar_url ?? undefined} sx={{ width: 56, height: 56, bgcolor: "primary.main" }}>
+          <Paper
+            elevation={0}
+            sx={{
+              p: { xs: 3, sm: 4 },
+              border: "1px solid",
+              borderColor: "divider",
+            }}
+          >
+            <Stack
+              direction="row"
+              spacing={2}
+              sx={{ mb: 3, alignItems: "center" }}
+            >
+              <Avatar
+                src={profile?.avatar_url ?? undefined}
+                sx={{ width: 56, height: 56, bgcolor: "primary.main" }}
+              >
                 {profile?.display_name?.slice(0, 1) ?? "강"}
               </Avatar>
               <Box>
@@ -81,26 +103,54 @@ export default async function DashboardPage() {
 
             <Stack component="dl" spacing={2.5} sx={{ mt: 3, m: 0 }}>
               <Box>
-                <Typography component="dt" variant="caption" color="text.secondary">
+                <Typography
+                  component="dt"
+                  variant="caption"
+                  color="text.secondary"
+                >
                   표시 이름
                 </Typography>
-                <Typography component="dd" sx={{ m: 0, mt: 0.5, fontWeight: 700 }}>
+                <Typography
+                  component="dd"
+                  sx={{ m: 0, mt: 0.5, fontWeight: 700 }}
+                >
                   {profile?.display_name ?? "프로필 없음"}
                 </Typography>
               </Box>
               <Box>
-                <Typography component="dt" variant="caption" color="text.secondary">
+                <Typography
+                  component="dt"
+                  variant="caption"
+                  color="text.secondary"
+                >
                   공개 주소
                 </Typography>
-                <Typography component="dd" sx={{ m: 0, mt: 0.5, fontWeight: 700, wordBreak: "break-all" }}>
+                <Typography
+                  component="dd"
+                  sx={{
+                    m: 0,
+                    mt: 0.5,
+                    fontWeight: 700,
+                    wordBreak: "break-all",
+                  }}
+                >
                   /{profile?.slug ?? "프로필 없음"}
                 </Typography>
               </Box>
               <Box>
-                <Typography component="dt" variant="caption" color="text.secondary">
+                <Typography
+                  component="dt"
+                  variant="caption"
+                  color="text.secondary"
+                >
                   사용자 ID
                 </Typography>
-                <Typography component="dd" variant="body2" color="text.secondary" sx={{ m: 0, mt: 0.5, wordBreak: "break-all" }}>
+                <Typography
+                  component="dd"
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ m: 0, mt: 0.5, wordBreak: "break-all" }}
+                >
                   {user.id}
                 </Typography>
               </Box>

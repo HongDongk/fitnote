@@ -1,6 +1,5 @@
-import { NextResponse } from "next/server";
-
 import { createClient } from "@/src/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 function getDisplayName(metadata: Record<string, unknown>) {
   const candidates = [
@@ -58,12 +57,14 @@ export async function GET(request: Request) {
 
   if (!profile) {
     const slug = `teacher-${user.id.replaceAll("-", "").slice(0, 24)}`;
-    const { error: profileCreateError } = await supabase.from("profiles").insert({
-      id: user.id,
-      display_name: getDisplayName(user.user_metadata),
-      slug,
-      avatar_url: getAvatarUrl(user.user_metadata),
-    });
+    const { error: profileCreateError } = await supabase
+      .from("profiles")
+      .insert({
+        id: user.id,
+        display_name: getDisplayName(user.user_metadata),
+        slug,
+        avatar_url: getAvatarUrl(user.user_metadata),
+      });
 
     if (profileCreateError?.code === "23505") {
       const { data: existingProfile } = await supabase
@@ -79,7 +80,9 @@ export async function GET(request: Request) {
 
     if (profileCreateError) {
       await supabase.auth.signOut();
-      return NextResponse.redirect(new URL("/?error=profile", requestUrl.origin));
+      return NextResponse.redirect(
+        new URL("/?error=profile", requestUrl.origin),
+      );
     }
   }
 
