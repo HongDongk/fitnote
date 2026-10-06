@@ -75,7 +75,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
                   priority
                 />
                 <Typography sx={{ fontWeight: 800, fontSize: 21 }}>
-                  핏노트
+                  FitNote
                 </Typography>
               </Stack>
               <Typography component="h1" variant="h4">

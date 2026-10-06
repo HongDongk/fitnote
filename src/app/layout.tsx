@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fitnote",
+  title: "FitNote",
   description: "1인 강사를 위한 회원 관리 서비스",
 };
 

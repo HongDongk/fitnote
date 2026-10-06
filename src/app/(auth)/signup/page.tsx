@@ -69,11 +69,11 @@ export default async function SignupPage() {
                   priority
                 />
                 <Typography sx={{ fontWeight: 800, fontSize: 21 }}>
-                  핏노트
+                  FitNote
                 </Typography>
               </Stack>
               <Typography component="h1" variant="h4">
-                핏노트 시작하기
+                FitNote 시작하기
               </Typography>
               <Typography color="text.secondary">
                 계정을 만들고 나만의 수업 관리를 시작하세요.

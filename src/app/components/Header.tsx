@@ -43,7 +43,7 @@ export default async function Header() {
               priority
             />
             <Typography sx={{ fontWeight: 800, fontSize: 21 }}>
-              핏노트
+              FitNote
             </Typography>
           </Stack>
           {user ? (
