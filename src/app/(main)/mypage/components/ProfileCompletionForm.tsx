@@ -1,6 +1,9 @@
 "use client";
 
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
+import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 import {
   Avatar,
   Box,
@@ -24,27 +27,58 @@ import { MessageDialog } from "@/src/app/components/MessageDialog";
 
 type ProfileCompletionFormProps = {
   userId: string;
+  displayName: string;
+  email: string;
+  slug: string;
   bio: string | null;
   avatarUrl: string | null;
 };
 
 export function ProfileCompletionForm({
   userId,
+  displayName,
+  email,
+  slug,
   bio,
   avatarUrl,
 }: ProfileCompletionFormProps) {
   const router = useRouter();
+  const [name, setName] = useState(displayName);
+  const [savedAvatarUrl, setSavedAvatarUrl] = useState(avatarUrl);
   const [introduction, setIntroduction] = useState(bio ?? "");
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState("");
   const [fieldErrors, setFieldErrors] = useState<{
+    displayName?: string;
     bio?: string;
     avatar?: string;
   }>({});
   const [message, setMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
   const isSubmitting = useRef(false);
   const uploadedAvatar = useRef<{ file: File; url: string } | null>(null);
+  const isComplete = Boolean(bio?.trim() && savedAvatarUrl?.trim());
+
+  useEffect(() => {
+    if (!isLinkCopied) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => setIsLinkCopied(false), 2000);
+    return () => window.clearTimeout(timeout);
+  }, [isLinkCopied]);
+
+  async function handleCopyLink() {
+    try {
+      await navigator.clipboard.writeText(
+        new URL(`/${slug}`, window.location.origin).href,
+      );
+      setIsLinkCopied(true);
+    } catch {
+      setMessage("링크를 복사하지 못했습니다. 다시 시도해주세요.");
+    }
+  }
 
   useEffect(() => {
     return () => {
@@ -86,16 +120,25 @@ export function ProfileCompletionForm({
     }
 
     setMessage("");
-    const result = profileSchema.safeParse({ bio: introduction });
+    const result = profileSchema.safeParse({
+      displayName: name,
+      bio: introduction,
+    });
     const avatarResult = avatarFile
       ? avatarFileSchema.safeParse(avatarFile)
       : null;
     const errors = {
-      bio: result.success ? undefined : result.error.issues[0]?.message,
+      displayName: result.success
+        ? undefined
+        : result.error.issues.find((issue) => issue.path[0] === "displayName")
+            ?.message,
+      bio: result.success
+        ? undefined
+        : result.error.issues.find((issue) => issue.path[0] === "bio")?.message,
       avatar:
         avatarResult && !avatarResult.success
           ? avatarResult.error.issues[0]?.message
-          : !avatarFile && !avatarUrl?.trim()
+          : !avatarFile && !savedAvatarUrl?.trim()
             ? "프로필 사진을 선택해주세요."
             : fieldErrors.avatar,
     };
@@ -108,7 +151,7 @@ export function ProfileCompletionForm({
     setIsLoading(true);
     try {
       const supabase = createClient();
-      let nextAvatarUrl = avatarUrl;
+      let nextAvatarUrl = savedAvatarUrl;
 
       if (avatarFile) {
         if (uploadedAvatar.current?.file === avatarFile) {
@@ -142,22 +185,33 @@ export function ProfileCompletionForm({
         }
       }
 
-      const { data, error } = await supabase
-        .from("profiles")
-        .update({
+      const response = await fetch("/api/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          displayName: result.data.displayName,
           bio: result.data.bio,
-          avatar_url: nextAvatarUrl,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId)
-        .select("id")
-        .single();
-
-      if (error || !data) {
-        setMessage("프로필을 저장하지 못했습니다. 다시 시도해주세요.");
+          avatarUrl: nextAvatarUrl,
+        }),
+      });
+      if (!response.ok) {
+        const data = await response.json();
+        setFieldErrors({
+          displayName: data.fieldErrors?.displayName,
+          bio: data.fieldErrors?.bio,
+          avatar: data.fieldErrors?.avatarUrl,
+        });
+        setMessage(
+          data.message || "내 정보를 저장하지 못했습니다. 다시 시도해주세요.",
+        );
         return;
       }
 
+      setSavedAvatarUrl(nextAvatarUrl);
+      setAvatarFile(null);
+      setPreviewUrl("");
+      uploadedAvatar.current = null;
+      setMessage("내 정보를 저장했어요.");
       router.refresh();
     } catch {
       setMessage("요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.");
@@ -191,7 +245,7 @@ export function ProfileCompletionForm({
           fontWeight: 700,
         }}
       >
-        나의 첫 핏노트
+        마이페이지
       </Typography>
       <Typography
         component="h1"
@@ -204,14 +258,19 @@ export function ProfileCompletionForm({
           wordBreak: "keep-all",
         }}
       >
-        회원님들께 나를 소개해주세요
+        내 정보 관리
       </Typography>
       <Typography
         variant="body2"
         color="text.secondary"
         sx={{ mt: 1, mb: 4, lineHeight: 1.8, wordBreak: "keep-all" }}
       >
-        사진 한 장과 짧은 소개로 나만의 프로필을 완성해보세요.
+        회원에게 보여줄 이름, 사진과 소개글을 관리하세요.
+        {!isComplete ? (
+          <Box component="span" sx={{ display: "block", mt: 1 }}>
+            프로필 사진과 소개글을 추가하면 다른 메뉴를 이용할 수 있어요.
+          </Box>
+        ) : null}
       </Typography>
 
       <Stack
@@ -220,7 +279,11 @@ export function ProfileCompletionForm({
         spacing={2}
         onSubmit={handleSubmit}
         sx={{
-          "& .MuiOutlinedInput-root": { minHeight: 56 },
+          "& .MuiOutlinedInput-root": {
+            minHeight: 56,
+            bgcolor: "#fafcfb",
+            borderRadius: "16px",
+          },
           "& .MuiFormHelperText-root": { minHeight: 23, lineHeight: "20px" },
         }}
       >
@@ -246,7 +309,7 @@ export function ProfileCompletionForm({
             }}
           >
             <Avatar
-              src={previewUrl || avatarUrl || undefined}
+              src={previewUrl || savedAvatarUrl || undefined}
               alt="프로필 사진 미리보기"
               sx={{
                 width: 112,
@@ -307,6 +370,25 @@ export function ProfileCompletionForm({
         </Box>
 
         <TextField
+          name="displayName"
+          label="표시 이름"
+          required
+          value={name}
+          disabled={isLoading}
+          error={Boolean(fieldErrors.displayName)}
+          helperText={fieldErrors.displayName || "회원에게 보여지는 이름입니다."}
+          slotProps={{ htmlInput: { maxLength: 50 } }}
+          onChange={(event) => {
+            setName(event.target.value);
+            setFieldErrors((previous) => ({
+              ...previous,
+              displayName: undefined,
+            }));
+            setMessage("");
+          }}
+        />
+
+        <TextField
           name="bio"
           label="소개글"
           placeholder="어떤 수업을 진행하는지 간단하게 소개해주세요."
@@ -339,6 +421,101 @@ export function ProfileCompletionForm({
           slotProps={{ htmlInput: { maxLength: 500 } }}
         />
 
+        <Box
+          component="dl"
+          sx={{
+            m: 0,
+            py: 1,
+            borderTop: "1px solid #e7ede9",
+            display: "grid",
+            gap: 0,
+          }}
+        >
+          {[
+            {
+              label: "이메일",
+              value: email || "등록된 이메일 없음",
+              Icon: EmailOutlinedIcon,
+            },
+            {
+              label: "공개 주소",
+              value: `/${slug}`,
+              Icon: LinkRoundedIcon,
+              canCopy: true,
+            },
+          ].map(({ label, value, Icon, canCopy }) => (
+            <Box
+              key={label}
+              sx={{
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 1.5,
+                py: 1.5,
+              }}
+            >
+              <Box
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: 36,
+                  height: 36,
+                  flexShrink: 0,
+                  bgcolor: "#f5f8f6",
+                  borderRadius: "12px",
+                  color: "text.secondary",
+                }}
+              >
+                <Icon sx={{ fontSize: 19 }} />
+              </Box>
+              <Box sx={{ minWidth: 0, flex: 1 }}>
+                <Typography
+                  component="dt"
+                  variant="caption"
+                  color="text.secondary"
+                  sx={{ fontSize: 12, lineHeight: 1.5 }}
+                >
+                  {label}
+                </Typography>
+                <Typography
+                  component="dd"
+                  sx={{
+                    m: 0,
+                    mt: 0.25,
+                    fontSize: 14,
+                    fontWeight: 500,
+                    lineHeight: 1.6,
+                    overflowWrap: "anywhere",
+                  }}
+                >
+                  {value}
+                </Typography>
+              </Box>
+              {canCopy && (
+                <Button
+                  type="button"
+                  size="small"
+                  startIcon={<ContentCopyRoundedIcon sx={{ fontSize: 16 }} />}
+                  onClick={handleCopyLink}
+                  aria-label="공개 주소 링크 복사"
+                  sx={{
+                    flexShrink: 0,
+                    alignSelf: "center",
+                    minHeight: 40,
+                    px: 1.5,
+                    borderRadius: "12px",
+                    bgcolor: "#f5f8f6",
+                    fontWeight: 600,
+                    "&:hover": { bgcolor: "#eaf2ed" },
+                  }}
+                >
+                  {isLinkCopied ? "복사 완료" : "링크 복사"}
+                </Button>
+              )}
+            </Box>
+          ))}
+        </Box>
+
         <Button
           type="submit"
           variant="contained"
@@ -355,7 +532,7 @@ export function ProfileCompletionForm({
           {isLoading ? (
             <CircularProgress size={22} color="inherit" />
           ) : (
-            "저장하고 시작하기"
+            isComplete ? "변경사항 저장" : "프로필 완성하기"
           )}
         </Button>
       </Stack>
@@ -363,7 +540,7 @@ export function ProfileCompletionForm({
       <MessageDialog
         open={Boolean(message)}
         onClose={() => setMessage("")}
-        title="프로필 저장 안내"
+        title="내 정보 저장 안내"
         message={message}
       />
     </Paper>
