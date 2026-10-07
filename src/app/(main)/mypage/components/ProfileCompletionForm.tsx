@@ -6,11 +6,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   FormHelperText,
   Paper,
   Stack,
@@ -25,6 +20,7 @@ import {
   profileSchema,
 } from "@/src/lib/schemas/profileSchemas";
 import { createClient } from "@/src/lib/supabase/client";
+import { MessageDialog } from "@/src/app/components/MessageDialog";
 
 type ProfileCompletionFormProps = {
   userId: string;
@@ -364,20 +360,12 @@ export function ProfileCompletionForm({
         </Button>
       </Stack>
 
-      <Dialog
+      <MessageDialog
         open={Boolean(message)}
         onClose={() => setMessage("")}
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle>프로필 저장 안내</DialogTitle>
-        <DialogContent>
-          <DialogContentText>{message}</DialogContentText>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setMessage("")}>확인</Button>
-        </DialogActions>
-      </Dialog>
+        title="프로필 저장 안내"
+        message={message}
+      />
     </Paper>
   );
 }

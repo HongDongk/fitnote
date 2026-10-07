@@ -7,11 +7,6 @@ import {
   Box,
   Button,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogContentText,
-  DialogTitle,
   InputAdornment,
   Stack,
   TextField,
@@ -22,6 +17,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, type SubmitEvent } from "react";
 
 import { createClient } from "@/src/lib/supabase/client";
+import { MessageDialog } from "@/src/app/components/MessageDialog";
 import type { Database } from "@/src/lib/supabase/database.types";
 
 import {
@@ -334,30 +330,16 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
           )}
         </Button>
       </Stack>
-      <Dialog
+      <MessageDialog
         open={Boolean(message)}
         onClose={() => setMessage("")}
-        aria-labelledby="auth-error-title"
-        aria-describedby="auth-error-description"
-        fullWidth
-        maxWidth="xs"
-      >
-        <DialogTitle id="auth-error-title">
-          {mode === "sign-up"
+        title={
+          mode === "sign-up"
             ? "회원가입을 완료하지 못했어요"
-            : "로그인에 실패했어요"}
-        </DialogTitle>
-        <DialogContent>
-          <DialogContentText id="auth-error-description">
-            {message}
-          </DialogContentText>
-        </DialogContent>
-        <DialogActions sx={{ px: 3, pb: 3 }}>
-          <Button variant="contained" onClick={() => setMessage("")} autoFocus>
-            확인
-          </Button>
-        </DialogActions>
-      </Dialog>
+            : "로그인에 실패했어요"
+        }
+        message={message}
+      />
     </Box>
   );
 }
