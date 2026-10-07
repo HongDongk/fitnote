@@ -1,38 +1,39 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { isAuthError } from "@supabase/supabase-js";
+import { useRef, useState } from "react";
 import { Alert, Button, CircularProgress, Stack } from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
-import { createClient } from "@/src/lib/supabase/client";
+import { useLogout } from "@/src/features/auth/hooks";
 
 export function LogoutButton() {
   const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const logout = useLogout();
+  const isLoading = logout.isPending;
+  const isSubmitting = useRef(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   async function signOut() {
-    if (isLoading) {
+    if (isSubmitting.current) {
       return;
     }
-    setIsLoading(true);
+    isSubmitting.current = true;
     setErrorMessage("");
     try {
-      const supabase = createClient();
-      const { error } = await supabase.auth.signOut();
-
-      if (error) {
-        setErrorMessage("로그아웃에 실패했습니다. 다시 시도해주세요.");
-        return;
-      }
+      await logout.mutateAsync();
 
       router.push("/");
       router.refresh();
-    } catch {
-      setErrorMessage("로그아웃에 실패했습니다. 인터넷 연결을 확인해주세요.");
+    } catch (error) {
+      setErrorMessage(
+        isAuthError(error)
+          ? "로그아웃에 실패했습니다. 다시 시도해주세요."
+          : "로그아웃에 실패했습니다. 인터넷 연결을 확인해주세요.",
+      );
     } finally {
-      setIsLoading(false);
+      isSubmitting.current = false;
     }
   }
 

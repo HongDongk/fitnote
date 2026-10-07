@@ -24,6 +24,8 @@ import {
 } from "@/src/lib/schemas/profileSchemas";
 import { createClient } from "@/src/lib/supabase/client";
 import { MessageDialog } from "@/src/app/components/MessageDialog";
+import { ApiError } from "@/src/lib/api/client";
+import { useUpdateProfile } from "@/src/features/profile/hooks";
 
 type ProfileCompletionFormProps = {
   userId: string;
@@ -43,6 +45,7 @@ export function ProfileCompletionForm({
   avatarUrl,
 }: ProfileCompletionFormProps) {
   const router = useRouter();
+  const updateProfile = useUpdateProfile();
   const [name, setName] = useState(displayName);
   const [savedAvatarUrl, setSavedAvatarUrl] = useState(avatarUrl);
   const [introduction, setIntroduction] = useState(bio ?? "");
@@ -185,27 +188,11 @@ export function ProfileCompletionForm({
         }
       }
 
-      const response = await fetch("/api/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          displayName: result.data.displayName,
-          bio: result.data.bio,
-          avatarUrl: nextAvatarUrl,
-        }),
+      await updateProfile.mutateAsync({
+        displayName: result.data.displayName,
+        bio: result.data.bio,
+        avatarUrl: nextAvatarUrl ?? "",
       });
-      if (!response.ok) {
-        const data = await response.json();
-        setFieldErrors({
-          displayName: data.fieldErrors?.displayName,
-          bio: data.fieldErrors?.bio,
-          avatar: data.fieldErrors?.avatarUrl,
-        });
-        setMessage(
-          data.message || "내 정보를 저장하지 못했습니다. 다시 시도해주세요.",
-        );
-        return;
-      }
 
       setSavedAvatarUrl(nextAvatarUrl);
       setAvatarFile(null);
@@ -213,8 +200,17 @@ export function ProfileCompletionForm({
       uploadedAvatar.current = null;
       setMessage("내 정보를 저장했어요.");
       router.refresh();
-    } catch {
-      setMessage("요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.");
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setFieldErrors({
+          displayName: error.fieldErrors.displayName,
+          bio: error.fieldErrors.bio,
+          avatar: error.fieldErrors.avatarUrl,
+        });
+        setMessage(error.message);
+      } else {
+        setMessage("요청을 처리하지 못했습니다. 잠시 후 다시 시도해주세요.");
+      }
     } finally {
       isSubmitting.current = false;
       setIsLoading(false);

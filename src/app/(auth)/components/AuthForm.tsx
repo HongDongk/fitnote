@@ -12,47 +12,31 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import type { SupabaseClient, User } from "@supabase/supabase-js";
+import { isAuthError } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
-import { useEffect, useState, type SubmitEvent } from "react";
+import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
-import { createClient } from "@/src/lib/supabase/client";
+import { AuthResponseError } from "@/src/features/auth/api";
+import { useLogin, useSignup } from "@/src/features/auth/hooks";
 import { MessageDialog } from "@/src/app/components/MessageDialog";
-import type { Database } from "@/src/lib/supabase/database.types";
 
 import {
   authFormMessages,
   getAuthErrorMessage,
-  getSignupResponseError,
   validateAuthForm,
   type AuthMode,
   type FieldErrors,
   type FieldName,
-} from "../../../lib/schemas/authSchemas";
-
-async function ensureProfile(supabase: SupabaseClient<Database>, user: User) {
-  const displayName =
-    typeof user.user_metadata.display_name === "string"
-      ? user.user_metadata.display_name.trim().slice(0, 50)
-      : user.email?.split("@")[0].slice(0, 50) || "강사";
-
-  const { error } = await supabase.from("profiles").upsert(
-    {
-      id: user.id,
-      display_name: displayName,
-      slug: `teacher-${user.id.replaceAll("-", "").slice(0, 24)}`,
-    },
-    { onConflict: "id", ignoreDuplicates: true },
-  );
-
-  return error;
-}
+} from "@/src/lib/schemas/authSchemas";
 
 export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
-  const [isLoading, setIsLoading] = useState(false);
+  const login = useLogin();
+  const signup = useSignup();
+  const isLoading = login.isPending || signup.isPending;
+  const isSubmitting = useRef(false);
   const [verificationEmail, setVerificationEmail] = useState("");
 
   useEffect(() => {
@@ -79,7 +63,7 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (isLoading) {
+    if (isSubmitting.current) {
       return;
     }
 
@@ -108,58 +92,31 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
       return;
     }
 
-    setIsLoading(true);
+    isSubmitting.current = true;
     try {
-      const supabase = createClient();
-
       if (mode === "sign-up") {
-        const { data, error } = await supabase.auth.signUp({
+        const data = await signup.mutateAsync({
           email,
           password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth/callback`,
-            data: { display_name: displayName },
-          },
+          displayName,
         });
-
-        if (error) {
-          setMessage(getAuthErrorMessage(error));
-          return;
-        }
-
-        const signupResponseError = getSignupResponseError(data);
-        if (signupResponseError) {
-          setMessage(signupResponseError);
-          return;
-        }
 
         if (!data.session) {
           setVerificationEmail(email);
           return;
         }
 
-        const profileError = data.user
-          ? await ensureProfile(supabase, data.user)
-          : null;
-
-        if (profileError) {
+        if (data.profileError) {
           setMessage(authFormMessages.signupProfileError);
           return;
         }
       } else {
-        const { data, error } = await supabase.auth.signInWithPassword({
+        const data = await login.mutateAsync({
           email,
           password,
         });
 
-        if (error) {
-          setMessage(getAuthErrorMessage(error));
-          return;
-        }
-
-        const profileError = await ensureProfile(supabase, data.user);
-
-        if (profileError) {
+        if (data.profileError) {
           setMessage(authFormMessages.signinProfileError);
           return;
         }
@@ -167,10 +124,16 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
 
       router.push("/dashboard");
       router.refresh();
-    } catch {
-      setMessage(authFormMessages.unexpectedError);
+    } catch (error) {
+      setMessage(
+        isAuthError(error)
+          ? getAuthErrorMessage(error)
+          : error instanceof AuthResponseError
+            ? error.message
+            : authFormMessages.unexpectedError,
+      );
     } finally {
-      setIsLoading(false);
+      isSubmitting.current = false;
     }
   }
 
