@@ -15,8 +15,13 @@ export default async function DashboardPage() {
   }
 
   return (
-    <Box sx={{ minHeight: "100dvh", bgcolor: "background.default" }}>
-      <Header />
+    <Box
+      sx={{
+        minHeight: "100dvh",
+        bgcolor: "background.default",
+      }}
+    >
+      <Header showNavigation />
       <Container
         component="main"
         maxWidth="md"
