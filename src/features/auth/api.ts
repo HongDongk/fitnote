@@ -2,12 +2,10 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 import { createClient } from "@/src/lib/supabase/client";
 import type { Database } from "@/src/lib/supabase/database.types";
-import { getSignupResponseError } from "@/src/lib/schemas/authSchemas";
+import { AuthResponseError, getSignupResponseError } from "./errors";
 
 export type LoginValues = { email: string; password: string };
 export type SignupValues = LoginValues & { displayName: string };
-
-export class AuthResponseError extends Error {}
 
 async function ensureProfile(supabase: SupabaseClient<Database>, user: User) {
   const displayName =

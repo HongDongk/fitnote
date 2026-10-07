@@ -1,12 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { isAuthError } from "@supabase/supabase-js";
 import { useRef, useState } from "react";
 import { Alert, Button, CircularProgress, Stack } from "@mui/material";
 import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
 import { useLogout } from "@/src/features/auth/hooks";
+import { getLogoutErrorMessage } from "@/src/features/auth/errors";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -27,11 +27,7 @@ export function LogoutButton() {
       router.push("/");
       router.refresh();
     } catch (error) {
-      setErrorMessage(
-        isAuthError(error)
-          ? "로그아웃에 실패했습니다. 다시 시도해주세요."
-          : "로그아웃에 실패했습니다. 인터넷 연결을 확인해주세요.",
-      );
+      setErrorMessage(getLogoutErrorMessage(error));
     } finally {
       isSubmitting.current = false;
     }

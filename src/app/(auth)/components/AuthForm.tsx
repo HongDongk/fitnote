@@ -12,17 +12,17 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { isAuthError } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
-import { AuthResponseError } from "@/src/features/auth/api";
+import {
+  authFormMessages,
+  getAuthSubmitErrorMessage,
+} from "@/src/features/auth/errors";
 import { useLogin, useSignup } from "@/src/features/auth/hooks";
 import { MessageDialog } from "@/src/app/components/MessageDialog";
 
 import {
-  authFormMessages,
-  getAuthErrorMessage,
   validateAuthForm,
   type AuthMode,
   type FieldErrors,
@@ -125,13 +125,7 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
       router.push("/dashboard");
       router.refresh();
     } catch (error) {
-      setMessage(
-        isAuthError(error)
-          ? getAuthErrorMessage(error)
-          : error instanceof AuthResponseError
-            ? error.message
-            : authFormMessages.unexpectedError,
-      );
+      setMessage(getAuthSubmitErrorMessage(error));
     } finally {
       isSubmitting.current = false;
     }

@@ -43,30 +43,6 @@ npx --yes supabase@2.119.0 link --project-ref YOUR_PROJECT_REF
 
 `YOUR_PROJECT_REF`는 Supabase 대시보드 URL의 `/project/` 뒤에 있는 프로젝트 ID입니다. 앱 환경변수와 CLI가 같은 프로젝트를 가리키는지 확인하세요. CLI 로그인은 서비스의 사용자 로그인과 별개입니다.
 
-## API·인증 코드 구조
-
-```text
-src/app/api/profile/route.ts     프로필 서버 API (/api/profile)
-src/features/profile/api.ts     프로필 요청 함수
-src/features/profile/hooks.ts   프로필 저장 훅
-src/features/auth/api.ts        Supabase 인증 요청 함수
-src/features/auth/hooks.ts      로그인·회원가입·로그아웃 훅
-src/lib/api/client.ts           공통 fetch·API 오류 처리
-src/lib/providers/              MUI·TanStack Query 전역 설정
-```
-
-컴포넌트는 기능별 훅을 호출합니다. Axios 없이 기본 `fetch`를 사용하며, 인증은 Supabase SDK를 호출합니다. `useMutation`은 로딩·오류 상태를 관리하고 세션은 Supabase가 관리합니다.
-
-```tsx
-const updateProfile = useUpdateProfile();
-await updateProfile.mutateAsync({ displayName, bio, avatarUrl });
-
-const login = useLogin();
-await login.mutateAsync({ email, password });
-```
-
-조회 데이터의 기본 staleTime은 60초이며 조회·저장의 자동 재시도는 비활성화되어 있습니다. 사용자별 조회에는 사용자 ID를 queryKey에 포함하세요. 인증 성공 시 이전 캐시를 정리합니다. 프로필 초기 조회와 저장 후 `router.refresh()`는 기존 서버 렌더링 방식을 유지합니다.
-
 ## DB TypeScript 타입 갱신
 
 ```bash
@@ -80,7 +56,7 @@ npm run types:supabase
 - 원격 DB 스키마 변경 후 실행하고 생성된 파일도 Git에 함께 저장합니다.
 - 타입 파일은 직접 수정하지 말고 생성 명령으로 갱신합니다.
 
-## 마이그레이션 
+## 마이그레이션
 
 로컬 SQL 파일을 만드는 명령입니다. 아직 원격 DB에 적용되지는 않습니다.
 
