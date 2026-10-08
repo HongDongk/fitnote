@@ -24,7 +24,7 @@ import {
 } from "@/src/lib/schemas/profileSchemas";
 import { createClient } from "@/src/lib/supabase/client";
 import { MessageDialog } from "@/src/app/components/MessageDialog";
-import { ApiError } from "@/src/lib/api/client";
+import { ApiError } from "@/src/lib/api/error";
 import { useUpdateProfile } from "@/src/features/profile/hooks";
 
 type ProfileCompletionFormProps = {

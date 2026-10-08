@@ -2,7 +2,7 @@ import type { SupabaseClient, User } from "@supabase/supabase-js";
 
 import { createClient } from "@/src/lib/supabase/client";
 import type { Database } from "@/src/lib/supabase/database.types";
-import { AuthResponseError, getSignupResponseError } from "./errors";
+import { getSignupResponseError } from "./errors";
 
 export type LoginValues = { email: string; password: string };
 export type SignupValues = LoginValues & { displayName: string };
@@ -52,7 +52,7 @@ export async function signUp({ email, password, displayName }: SignupValues) {
 
   const responseError = getSignupResponseError(data);
   if (responseError) {
-    throw new AuthResponseError(responseError);
+    throw responseError;
   }
 
   const profileError = data.session && data.user

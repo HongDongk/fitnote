@@ -1,7 +1,7 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import type { z } from "zod";
 
-import { ApiError } from "@/src/lib/api/client";
+import { ApiError } from "@/src/lib/api/error";
 
 export const profileMessages = {
   invalidInput: "입력한 정보를 확인해주세요.",

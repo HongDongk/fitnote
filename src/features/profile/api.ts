@@ -1,6 +1,6 @@
 import type { z } from "zod";
 
-import { ApiError } from "@/src/lib/api/client";
+import { ApiError } from "@/src/lib/api/error";
 import { profileUpdateSchema } from "@/src/lib/schemas/profileSchemas";
 import { createClient } from "@/src/lib/supabase/client";
 import type { Tables } from "@/src/lib/supabase/database.types";

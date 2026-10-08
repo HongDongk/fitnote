@@ -5,7 +5,7 @@ import {
   type User,
 } from "@supabase/supabase-js";
 
-export class AuthResponseError extends Error {}
+import { ApiError } from "@/src/lib/api/error";
 
 export const authFormMessages = {
   duplicateSignup: "이미 가입된 이메일입니다. 로그인해주세요.",
@@ -25,10 +25,10 @@ export function getSignupResponseError({
   session: Session | null;
 }) {
   if (!user) {
-    return authFormMessages.unexpectedError;
+    return new ApiError(authFormMessages.unexpectedError, 500);
   }
   if (!session && user.identities?.length === 0) {
-    return authFormMessages.duplicateSignup;
+    return new ApiError(authFormMessages.duplicateSignup, 409);
   }
 
   return null;
@@ -76,7 +76,7 @@ export function getAuthSubmitErrorMessage(error: unknown) {
   if (isAuthError(error)) {
     return getAuthErrorMessage(error);
   }
-  if (error instanceof AuthResponseError) {
+  if (error instanceof ApiError) {
     return error.message;
   }
 
