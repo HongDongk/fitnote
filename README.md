@@ -15,7 +15,7 @@ npm run dev
 
 ```bash
 npm run build
-npm run start
+npm start
 ```
 
 ## 코드·연결 검증
@@ -34,11 +34,10 @@ npm run test:supabase
 ## Supabase CLI 로그인·프로젝트 연결
 
 웹 실행만 할 때는 필요하지 않습니다. 타입 생성이나 마이그레이션 작업을 할 때 설정합니다.
-타입 생성 스크립트와 동일한 CLI 버전 `2.119.0`을 사용합니다.
 
 ```bash
-npx --yes supabase@2.119.0 login
-npx --yes supabase@2.119.0 link --project-ref YOUR_PROJECT_REF
+npx supabase login
+npx supabase link --project-ref YOUR_PROJECT_REF
 ```
 
 `YOUR_PROJECT_REF`는 Supabase 대시보드 URL의 `/project/` 뒤에 있는 프로젝트 ID입니다. 앱 환경변수와 CLI가 같은 프로젝트를 가리키는지 확인하세요. CLI 로그인은 서비스의 사용자 로그인과 별개입니다.
@@ -61,19 +60,19 @@ npm run types:supabase
 로컬 SQL 파일을 만드는 명령입니다. 아직 원격 DB에 적용되지는 않습니다.
 
 ```bash
-npx --yes supabase@2.119.0 migration new change_name
+npx supabase migration new change_name
 ```
 
 생성된 `supabase/migrations/*.sql`을 작성한 뒤 먼저 적용 예정 목록을 확인합니다.
 
 ```bash
-npx --yes supabase@2.119.0 db push --linked --dry-run
+npx supabase db push --dry-run
 ```
 
 **아래 명령은 연결된 원격 DB에 SQL을 실제로 적용합니다.** 웹 실행을 위해 매번 실행하는 명령이 아닙니다. 프로젝트·SQL·적용 목록을 확인하고 명시적으로 적용하기로 결정한 경우에만 실행하세요.
 
 ```bash
-npx --yes supabase@2.119.0 db push --linked
+npx supabase db push
 ```
 
 스키마 변경 적용 후 타입도 갱신합니다.

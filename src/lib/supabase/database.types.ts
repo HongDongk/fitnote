@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      members: {
+        Row: {
+          auth_user_id: string | null
+          created_at: string
+          email: string
+          id: string
+          instructor_id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          auth_user_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          instructor_id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          auth_user_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          instructor_id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "members_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
