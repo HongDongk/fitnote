@@ -15,6 +15,10 @@ export const memberLoginSchema = memberLinkSchema.extend({
   email: signInSchema.shape.email,
 });
 
+export const memberDeleteSchema = z.object({
+  memberId: z.uuid({ error: "삭제할 회원 정보를 확인해주세요." }),
+});
+
 export const memberCreateSchema = z.object({
   name: z
     .string()

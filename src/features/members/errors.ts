@@ -27,6 +27,8 @@ export const memberMessages = {
   duplicateEmail: "이미 등록된 회원 이메일입니다.",
   managementNotReady:
     "회원 관리 기능이 아직 적용되지 않았습니다. 관리자에게 문의해주세요.",
+  deleteFailed: "회원을 삭제하지 못했습니다. 잠시 후 다시 시도해주세요.",
+  memberNotFound: "회원을 찾을 수 없습니다. 이미 삭제되었을 수 있습니다.",
 };
 
 export function getMemberValidationError(error: z.ZodError) {
@@ -102,4 +104,20 @@ export function getMemberCreateRequestError(error: unknown) {
 
 export function getMemberManagementErrorMessage(error: unknown) {
   return error instanceof ApiError ? error.message : memberMessages.readFailed;
+}
+
+export function getMemberDeleteDatabaseError(error: PostgrestError) {
+  if (error.code === "42501") {
+    return new ApiError(memberMessages.forbidden, 403);
+  }
+  if (error.code === "42P01" || error.code === "PGRST205") {
+    return new ApiError(memberMessages.managementNotReady, 503);
+  }
+  return new ApiError(memberMessages.deleteFailed, 500);
+}
+
+export function getMemberDeleteRequestError(error: unknown) {
+  return error instanceof ApiError
+    ? error
+    : new ApiError(memberMessages.deleteFailed, 500);
 }

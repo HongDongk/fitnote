@@ -16,6 +16,9 @@ type MessageDialogProps = {
   message: string;
   onClose: () => void;
   confirmText?: string;
+  onConfirm?: () => void;
+  isPending?: boolean;
+  confirmColor?: "primary" | "error";
 };
 
 export function MessageDialog({
@@ -24,6 +27,9 @@ export function MessageDialog({
   message,
   onClose,
   confirmText = "확인",
+  onConfirm,
+  isPending = false,
+  confirmColor = "primary",
 }: MessageDialogProps) {
   const id = useId();
   const titleId = `${id}-title`;
@@ -32,7 +38,7 @@ export function MessageDialog({
   return (
     <Dialog
       open={open}
-      onClose={onClose}
+      onClose={isPending ? undefined : onClose}
       aria-labelledby={titleId}
       aria-describedby={descriptionId}
       fullWidth
@@ -86,10 +92,24 @@ export function MessageDialog({
         </DialogContentText>
       </DialogContent>
       <DialogActions sx={{ p: 3 }}>
+        {onConfirm && (
+          <Button
+            variant="outlined"
+            onClick={onClose}
+            disabled={isPending}
+            autoFocus
+            fullWidth
+            sx={{ minHeight: 50, borderRadius: "14px" }}
+          >
+            취소
+          </Button>
+        )}
         <Button
           variant="contained"
-          onClick={onClose}
-          autoFocus
+          color={confirmColor}
+          onClick={onConfirm ?? onClose}
+          disabled={isPending}
+          autoFocus={!onConfirm}
           fullWidth
           sx={{ minHeight: 50, borderRadius: "14px" }}
         >

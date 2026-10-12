@@ -5,6 +5,7 @@ import {
   memberLinkSchema,
   memberLoginSchema,
   memberCreateSchema,
+  memberDeleteSchema,
 } from "@/src/lib/schemas/memberSchemas";
 import { createClient } from "@/src/lib/supabase/client";
 import type { Tables } from "@/src/lib/supabase/database.types";
@@ -13,6 +14,8 @@ import {
   getMemberDatabaseError,
   getMemberCreateDatabaseError,
   getMemberCreateRequestError,
+  getMemberDeleteDatabaseError,
+  getMemberDeleteRequestError,
   getMemberReadError,
   getMemberRequestError,
   getMemberValidationError,
@@ -98,6 +101,36 @@ export async function createMember(
     return data;
   } catch (error) {
     throw getMemberCreateRequestError(error);
+  }
+}
+
+export async function deleteMember(instructorId: string, memberId: string) {
+  const result = memberDeleteSchema.safeParse({ memberId });
+  if (!result.success) {
+    throw getMemberValidationError(result.error);
+  }
+
+  try {
+    const supabase = createClient();
+    await verifyInstructor(supabase, instructorId);
+
+    const { data, error } = await supabase
+      .from("members")
+      .delete()
+      .eq("id", result.data.memberId)
+      .eq("instructor_id", instructorId)
+      .select("id")
+      .maybeSingle();
+
+    if (error) {
+      throw getMemberDeleteDatabaseError(error);
+    }
+    if (!data) {
+      throw new ApiError(memberMessages.memberNotFound, 404);
+    }
+    return data.id;
+  } catch (error) {
+    throw getMemberDeleteRequestError(error);
   }
 }
 

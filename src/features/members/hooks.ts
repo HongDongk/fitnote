@@ -4,11 +4,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   createMember,
+  deleteMember,
   getInstructorMembers,
   getMyMember,
   linkMemberAccount,
   requestMemberLogin,
   type CreateMemberInput,
+  type MemberSummary,
 } from "./api";
 
 export function useInstructorMembers(instructorId: string) {
@@ -30,6 +32,26 @@ export function useCreateMember(instructorId: string) {
       queryClient.invalidateQueries({
         queryKey: ["members", "instructor", instructorId],
       }),
+  });
+}
+
+export function useDeleteMember(instructorId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (memberId: string) => deleteMember(instructorId, memberId),
+    retry: false,
+    onSuccess: async (memberId) => {
+      queryClient.setQueryData<MemberSummary[]>(
+        ["members", "instructor", instructorId],
+        (previous) => previous?.filter((member) => member.id !== memberId),
+      );
+      await Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: ["members", "instructor", instructorId],
+        }),
+        queryClient.invalidateQueries({ queryKey: ["members", "mine"] }),
+      ]);
+    },
   });
 }
 

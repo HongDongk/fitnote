@@ -1,6 +1,7 @@
 "use client";
 
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
+import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import {
   Alert,
@@ -9,6 +10,7 @@ import {
   Button,
   Chip,
   CircularProgress,
+  IconButton,
   Paper,
   Stack,
   TextField,
@@ -17,6 +19,7 @@ import {
 import { useRef, useState, type SubmitEvent } from "react";
 
 import { MessageDialog } from "@/src/app/components/MessageDialog";
+import type { MemberSummary } from "@/src/features/members/api";
 import { ApiError } from "@/src/lib/api/error";
 import { memberCreateSchema } from "@/src/lib/schemas/memberSchemas";
 
@@ -26,6 +29,7 @@ import {
 } from "@/src/features/members/errors";
 import {
   useCreateMember,
+  useDeleteMember,
   useInstructorMembers,
 } from "@/src/features/members/hooks";
 
@@ -36,12 +40,35 @@ type MemberManagementProps = {
 export function MemberManagement({ instructorId }: MemberManagementProps) {
   const members = useInstructorMembers(instructorId);
   const createMember = useCreateMember(instructorId);
+  const deleteMember = useDeleteMember(instructorId);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
   const isSubmitting = useRef(false);
+  const [memberToDelete, setMemberToDelete] = useState<MemberSummary | null>(
+    null,
+  );
+  const [deleteSuccess, setDeleteSuccess] = useState("");
+  const isDeleting = useRef(false);
+
+  async function handleDelete() {
+    if (!memberToDelete || isDeleting.current) {
+      return;
+    }
+    isDeleting.current = true;
+    try {
+      await deleteMember.mutateAsync(memberToDelete.id);
+      setDeleteSuccess(`${memberToDelete.name} 회원이 삭제되었습니다.`);
+      setMemberToDelete(null);
+    } catch (error) {
+      setMemberToDelete(null);
+      setMessage(getMemberManagementErrorMessage(error));
+    } finally {
+      isDeleting.current = false;
+    }
+  }
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -123,43 +150,45 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 회원이 인증할 이메일을 입력해주세요.
               </Typography>
             </Box>
-            <TextField
-              label="이름"
-              name="name"
-              required
-              fullWidth
-              autoComplete="off"
-              value={name}
-              disabled={createMember.isPending}
-              error={Boolean(fieldErrors.name)}
-              helperText={fieldErrors.name || " "}
-              slotProps={{ htmlInput: { maxLength: 50 } }}
-              sx={{ "& .MuiInputBase-root": { minHeight: 56 } }}
-              onChange={(event) => {
-                setName(event.target.value);
-                setFieldErrors((previous) => ({ ...previous, name: "" }));
-                setSuccess(false);
-              }}
-            />
-            <TextField
-              label="이메일"
-              name="email"
-              type="email"
-              required
-              fullWidth
-              autoComplete="off"
-              value={email}
-              disabled={createMember.isPending}
-              error={Boolean(fieldErrors.email)}
-              helperText={fieldErrors.email || " "}
-              slotProps={{ htmlInput: { maxLength: 254 } }}
-              sx={{ "& .MuiInputBase-root": { minHeight: 56 } }}
-              onChange={(event) => {
-                setEmail(event.target.value);
-                setFieldErrors((previous) => ({ ...previous, email: "" }));
-                setSuccess(false);
-              }}
-            />
+            <Stack>
+              <TextField
+                label="이름"
+                name="name"
+                required
+                fullWidth
+                autoComplete="off"
+                value={name}
+                disabled={createMember.isPending}
+                error={Boolean(fieldErrors.name)}
+                helperText={fieldErrors.name || " "}
+                slotProps={{ htmlInput: { maxLength: 50 } }}
+                sx={{ "& .MuiInputBase-root": { minHeight: 56 } }}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  setFieldErrors((previous) => ({ ...previous, name: "" }));
+                  setSuccess(false);
+                }}
+              />
+              <TextField
+                label="이메일"
+                name="email"
+                type="email"
+                required
+                fullWidth
+                autoComplete="off"
+                value={email}
+                disabled={createMember.isPending}
+                error={Boolean(fieldErrors.email)}
+                helperText={fieldErrors.email || " "}
+                slotProps={{ htmlInput: { maxLength: 254 } }}
+                sx={{ "& .MuiInputBase-root": { minHeight: 56 } }}
+                onChange={(event) => {
+                  setEmail(event.target.value);
+                  setFieldErrors((previous) => ({ ...previous, email: "" }));
+                  setSuccess(false);
+                }}
+              />
+            </Stack>
             <Button
               type="submit"
               variant="contained"
@@ -205,6 +234,7 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 <Chip label={`${members.data.length}명`} size="small" />
               )}
             </Stack>
+            {deleteSuccess && <Alert severity="success">{deleteSuccess}</Alert>}
             {members.isPending ? (
               <Stack
                 role="status"
@@ -242,7 +272,11 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                   <Box
                     component="li"
                     key={member.id}
-                    sx={{ p: 2, border: "1px solid #e2ebe5", borderRadius: "16px" }}
+                    sx={{
+                      p: 2,
+                      border: "1px solid #e2ebe5",
+                      borderRadius: "16px",
+                    }}
                   >
                     <Stack
                       direction="row"
@@ -267,13 +301,30 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                         >
                           {member.email}
                         </Typography>
+                      </Stack>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={0.5}
+                        sx={{ alignItems: "center", flexShrink: 0 }}
+                      >
                         <Chip
                           label={member.auth_user_id ? "연결됨" : "인증 대기"}
                           color={member.auth_user_id ? "primary" : "default"}
                           variant="outlined"
                           size="small"
-                          sx={{ alignSelf: "flex-start" }}
                         />
+                        <IconButton
+                          aria-label={`${member.name} 회원 삭제`}
+                          color="error"
+                          disabled={deleteMember.isPending}
+                          onClick={() => {
+                            setDeleteSuccess("");
+                            setMemberToDelete(member);
+                          }}
+                          sx={{ width: 44, height: 44 }}
+                        >
+                          <DeleteOutlineRoundedIcon />
+                        </IconButton>
                       </Stack>
                     </Stack>
                   </Box>
@@ -304,9 +355,19 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
       </Box>
       <MessageDialog
         open={Boolean(message)}
-        title="회원 등록 안내"
+        title="회원 관리 안내"
         message={message}
         onClose={() => setMessage("")}
+      />
+      <MessageDialog
+        open={Boolean(memberToDelete)}
+        title="회원을 삭제할까요?"
+        message={`${memberToDelete?.name ?? ""} 회원의 정보와 계정 연결이 삭제됩니다. 이 작업은 되돌릴 수 없으며, 회원의 로그인 계정은 유지됩니다.`}
+        confirmText={deleteMember.isPending ? "삭제 중…" : "삭제"}
+        confirmColor="error"
+        isPending={deleteMember.isPending}
+        onConfirm={() => void handleDelete()}
+        onClose={() => setMemberToDelete(null)}
       />
     </Stack>
   );
