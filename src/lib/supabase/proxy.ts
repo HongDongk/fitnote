@@ -42,6 +42,7 @@ export async function updateSession(request: NextRequest) {
     pathname !== "/" &&
     pathname !== "/mypage" &&
     pathname !== "/auth/callback" &&
+    pathname !== "/auth/member/callback" &&
     pathname !== "/api" &&
     !pathname.startsWith("/api/")
   ) {
