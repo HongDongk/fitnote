@@ -1,7 +1,6 @@
 "use client";
 
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
+import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import {
   Alert,
@@ -12,6 +11,7 @@ import {
   CircularProgress,
   IconButton,
   Paper,
+  Snackbar,
   Stack,
   TextField,
   Typography,
@@ -45,12 +45,11 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
   const [email, setEmail] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [message, setMessage] = useState("");
-  const [success, setSuccess] = useState(false);
+  const [notification, setNotification] = useState("");
   const isSubmitting = useRef(false);
   const [memberToDelete, setMemberToDelete] = useState<MemberSummary | null>(
     null,
   );
-  const [deleteSuccess, setDeleteSuccess] = useState("");
   const isDeleting = useRef(false);
 
   async function handleDelete() {
@@ -60,7 +59,7 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
     isDeleting.current = true;
     try {
       await deleteMember.mutateAsync(memberToDelete.id);
-      setDeleteSuccess(`${memberToDelete.name} 회원이 삭제되었습니다.`);
+      setNotification("회원이 삭제되었습니다.");
       setMemberToDelete(null);
     } catch (error) {
       setMemberToDelete(null);
@@ -76,7 +75,7 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
       return;
     }
 
-    setSuccess(false);
+    setNotification("");
     setFieldErrors({});
     const result = memberCreateSchema.safeParse({ name, email });
     if (!result.success) {
@@ -89,7 +88,7 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
       await createMember.mutateAsync(result.data);
       setName("");
       setEmail("");
-      setSuccess(true);
+      setNotification("회원이 등록되었습니다.");
     } catch (error) {
       if (
         error instanceof ApiError &&
@@ -166,7 +165,6 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 onChange={(event) => {
                   setName(event.target.value);
                   setFieldErrors((previous) => ({ ...previous, name: "" }));
-                  setSuccess(false);
                 }}
               />
               <TextField
@@ -185,7 +183,6 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 onChange={(event) => {
                   setEmail(event.target.value);
                   setFieldErrors((previous) => ({ ...previous, email: "" }));
-                  setSuccess(false);
                 }}
               />
             </Stack>
@@ -193,20 +190,10 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
               type="submit"
               variant="contained"
               disabled={createMember.isPending}
-              startIcon={
-                createMember.isPending ? (
-                  <CircularProgress size={18} color="inherit" />
-                ) : (
-                  <AddRoundedIcon />
-                )
-              }
               sx={{ minHeight: 50, borderRadius: "14px" }}
             >
               {createMember.isPending ? "등록 중…" : "회원 등록"}
             </Button>
-            {success && (
-              <Alert severity="success">회원이 등록되었습니다.</Alert>
-            )}
             <Typography
               variant="caption"
               color="text.secondary"
@@ -234,7 +221,6 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 <Chip label={`${members.data.length}명`} size="small" />
               )}
             </Stack>
-            {deleteSuccess && <Alert severity="success">{deleteSuccess}</Alert>}
             {members.isPending ? (
               <Stack
                 role="status"
@@ -315,15 +301,14 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                         />
                         <IconButton
                           aria-label={`${member.name} 회원 삭제`}
-                          color="error"
                           disabled={deleteMember.isPending}
                           onClick={() => {
-                            setDeleteSuccess("");
+                            setNotification("");
                             setMemberToDelete(member);
                           }}
                           sx={{ width: 44, height: 44 }}
                         >
-                          <DeleteOutlineRoundedIcon />
+                          <DeleteRoundedIcon />
                         </IconButton>
                       </Stack>
                     </Stack>
@@ -369,6 +354,32 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
         onConfirm={() => void handleDelete()}
         onClose={() => setMemberToDelete(null)}
       />
+      <Snackbar
+        open={Boolean(notification)}
+        autoHideDuration={2000}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        onClose={(_, reason) => {
+          if (reason !== "clickaway") {
+            setNotification("");
+          }
+        }}
+        sx={{ width: "calc(100% - 32px)", maxWidth: 420 }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          role="status"
+          onClose={() => setNotification("")}
+          sx={{
+            width: "100%",
+            bgcolor: "primary.main",
+            borderRadius: "14px",
+            boxShadow: "0 8px 32px rgba(23, 35, 28, 0.16)",
+          }}
+        >
+          {notification}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }
