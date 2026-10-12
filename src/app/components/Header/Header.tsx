@@ -1,8 +1,9 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import Image from "next/image";
 
+import HeaderNavigation from "@/src/app/components/Header/HeaderNavigation";
+import { LogoutButton } from "@/src/app/components/Header/LogoutButton";
 import { createClient } from "@/src/lib/supabase/server";
-import { LogoutButton } from "./LogoutButton";
 
 export default async function Header({
   showNavigation = false,
@@ -75,22 +76,7 @@ export default async function Header({
             </Button>
           )}
         </Stack>
-        {user && showNavigation && (
-          <Stack
-            component="nav"
-            aria-label="주요 메뉴"
-            direction="row"
-            spacing={1}
-            sx={{ pb: 1.5 }}
-          >
-            <Button href="/dashboard" sx={{ borderRadius: "10px", px: 2 }}>
-              대시보드
-            </Button>
-            <Button href="/mypage" sx={{ borderRadius: "10px", px: 2 }}>
-              마이페이지
-            </Button>
-          </Stack>
-        )}
+        {user && showNavigation && <HeaderNavigation />}
       </Container>
     </Box>
   );

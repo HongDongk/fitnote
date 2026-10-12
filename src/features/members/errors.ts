@@ -20,6 +20,13 @@ export const memberMessages = {
   callbackInvalid:
     "인증 링크가 유효하지 않거나 만료되었습니다. 인증 메일을 다시 요청해주세요.",
   callbackFailed: "회원 인증 처리에 실패했습니다. 잠시 후 다시 시도해주세요.",
+  forbidden: "본인의 회원 정보만 관리할 수 있습니다.",
+  authCheckFailed:
+    "로그인 정보를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.",
+  createFailed: "회원을 등록하지 못했습니다. 잠시 후 다시 시도해주세요.",
+  duplicateEmail: "이미 등록된 회원 이메일입니다.",
+  managementNotReady:
+    "회원 관리 기능이 아직 적용되지 않았습니다. 관리자에게 문의해주세요.",
 };
 
 export function getMemberValidationError(error: z.ZodError) {
@@ -67,4 +74,32 @@ export function getMemberReadError(error: unknown) {
   return error instanceof ApiError
     ? error
     : new ApiError(memberMessages.readFailed, 500);
+}
+
+export function getMemberCreateDatabaseError(error: PostgrestError) {
+  if (error.code === "23505") {
+    return new ApiError(memberMessages.duplicateEmail, 409, {
+      email: memberMessages.duplicateEmail,
+    });
+  }
+  if (error.code === "42501") {
+    return new ApiError(memberMessages.forbidden, 403);
+  }
+  if (error.code === "23503") {
+    return new ApiError(memberMessages.instructorNotFound, 403);
+  }
+  if (error.code === "42P01" || error.code === "PGRST205") {
+    return new ApiError(memberMessages.managementNotReady, 503);
+  }
+  return new ApiError(memberMessages.createFailed, 500);
+}
+
+export function getMemberCreateRequestError(error: unknown) {
+  return error instanceof ApiError
+    ? error
+    : new ApiError(memberMessages.createFailed, 500);
+}
+
+export function getMemberManagementErrorMessage(error: unknown) {
+  return error instanceof ApiError ? error.message : memberMessages.readFailed;
 }

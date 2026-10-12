@@ -12,7 +12,7 @@ import {
   Typography,
 } from "@mui/material";
 import Footer from "./components/Footer";
-import Header from "./components/Header";
+import Header from "./components/Header/Header";
 
 const features = [
   {

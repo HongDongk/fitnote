@@ -4,12 +4,15 @@ import { ApiError } from "@/src/lib/api/error";
 import {
   memberLinkSchema,
   memberLoginSchema,
+  memberCreateSchema,
 } from "@/src/lib/schemas/memberSchemas";
 import { createClient } from "@/src/lib/supabase/client";
 import type { Tables } from "@/src/lib/supabase/database.types";
 import {
   getMemberAuthRequestError,
   getMemberDatabaseError,
+  getMemberCreateDatabaseError,
+  getMemberCreateRequestError,
   getMemberReadError,
   getMemberRequestError,
   getMemberValidationError,
@@ -18,6 +21,85 @@ import {
 
 export type LinkMemberAccountInput = z.infer<typeof memberLinkSchema>;
 export type RequestMemberLoginInput = z.infer<typeof memberLoginSchema>;
+export type CreateMemberInput = z.infer<typeof memberCreateSchema>;
+export type MemberSummary = Pick<
+  Tables<"members">,
+  "id" | "name" | "email" | "auth_user_id" | "created_at"
+>;
+
+async function verifyInstructor(
+  supabase: ReturnType<typeof createClient>,
+  instructorId: string,
+) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
+  if (error?.name === "AuthSessionMissingError" || (!error && !user)) {
+    throw new ApiError(memberMessages.loginRequired, 401);
+  }
+  if (error || !user) {
+    throw new ApiError(memberMessages.authCheckFailed, 500);
+  }
+  if (user.id !== instructorId) {
+    throw new ApiError(memberMessages.forbidden, 403);
+  }
+}
+
+export async function getInstructorMembers(
+  instructorId: string,
+): Promise<MemberSummary[]> {
+  try {
+    const supabase = createClient();
+    await verifyInstructor(supabase, instructorId);
+
+    const { data, error } = await supabase
+      .from("members")
+      .select("id,name,email,auth_user_id,created_at")
+      .eq("instructor_id", instructorId)
+      .order("created_at", { ascending: false })
+      .order("id", { ascending: false });
+
+    if (error) {
+      throw new ApiError(memberMessages.readFailed, 500);
+    }
+    return data ?? [];
+  } catch (error) {
+    throw getMemberReadError(error);
+  }
+}
+
+export async function createMember(
+  instructorId: string,
+  values: CreateMemberInput,
+): Promise<MemberSummary> {
+  const result = memberCreateSchema.safeParse(values);
+  if (!result.success) {
+    throw getMemberValidationError(result.error);
+  }
+
+  try {
+    const supabase = createClient();
+    await verifyInstructor(supabase, instructorId);
+
+    const { data, error } = await supabase
+      .from("members")
+      .insert({ instructor_id: instructorId, ...result.data })
+      .select("id,name,email,auth_user_id,created_at")
+      .single();
+
+    if (error) {
+      throw getMemberCreateDatabaseError(error);
+    }
+    if (!data) {
+      throw new ApiError(memberMessages.createFailed, 500);
+    }
+    return data;
+  } catch (error) {
+    throw getMemberCreateRequestError(error);
+  }
+}
 
 export async function linkMemberAccount(
   values: LinkMemberAccountInput,

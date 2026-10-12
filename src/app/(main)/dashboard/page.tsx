@@ -1,7 +1,7 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import { redirect } from "next/navigation";
 
-import Header from "@/src/app/components/Header";
+import Header from "@/src/app/components/Header/Header";
 import { createClient } from "@/src/lib/supabase/server";
 
 export default async function DashboardPage() {
@@ -22,11 +22,7 @@ export default async function DashboardPage() {
       }}
     >
       <Header showNavigation />
-      <Container
-        component="main"
-        maxWidth="md"
-        sx={{ py: { xs: 3, sm: 6 } }}
-      >
+      <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
         <Stack spacing={2} sx={{ alignItems: "flex-start" }}>
           <Typography component="h1" variant="h4">
             대시보드
