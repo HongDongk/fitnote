@@ -17,11 +17,6 @@ function getDisplayName(metadata: Record<string, unknown>) {
   return displayName?.trim().slice(0, 50) ?? "강사";
 }
 
-function getAvatarUrl(metadata: Record<string, unknown>) {
-  const avatarUrl = metadata.avatar_url ?? metadata.picture;
-  return typeof avatarUrl === "string" ? avatarUrl : null;
-}
-
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -53,7 +48,7 @@ export async function GET(request: Request) {
 
   const { data: profile, error: profileReadError } = await supabase
     .from("profiles")
-    .select("id")
+    .select("slug")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -64,6 +59,8 @@ export async function GET(request: Request) {
     );
   }
 
+  let profileSlug = profile?.slug;
+
   if (!profile) {
     const slug = `teacher-${user.id.replaceAll("-", "").slice(0, 24)}`;
     const { error: profileCreateError } = await supabase
@@ -72,18 +69,19 @@ export async function GET(request: Request) {
         id: user.id,
         display_name: getDisplayName(user.user_metadata),
         slug,
-        avatar_url: getAvatarUrl(user.user_metadata),
       });
 
     if (profileCreateError?.code === "23505") {
       const { data: existingProfile } = await supabase
         .from("profiles")
-        .select("id")
+        .select("slug")
         .eq("id", user.id)
         .maybeSingle();
 
       if (existingProfile) {
-        return NextResponse.redirect(new URL("/dashboard", requestUrl.origin));
+        return NextResponse.redirect(
+          new URL(`/${existingProfile.slug}`, requestUrl.origin),
+        );
       }
     }
 
@@ -93,7 +91,9 @@ export async function GET(request: Request) {
         new URL("/login?error=profile", requestUrl.origin),
       );
     }
+
+    profileSlug = slug;
   }
 
-  return NextResponse.redirect(new URL("/dashboard", requestUrl.origin));
+  return NextResponse.redirect(new URL(`/${profileSlug}`, requestUrl.origin));
 }

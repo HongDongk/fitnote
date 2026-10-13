@@ -94,6 +94,7 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
 
     isSubmitting.current = true;
     try {
+      let profileSlug: string;
       if (mode === "sign-up") {
         const data = await signup.mutateAsync({
           email,
@@ -106,23 +107,25 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
           return;
         }
 
-        if (data.profileError) {
+        if (data.profileError || !data.profileSlug) {
           setMessage(authFormMessages.signupProfileError);
           return;
         }
+        profileSlug = data.profileSlug;
       } else {
         const data = await login.mutateAsync({
           email,
           password,
         });
 
-        if (data.profileError) {
+        if (data.profileError || !data.profileSlug) {
           setMessage(authFormMessages.signinProfileError);
           return;
         }
+        profileSlug = data.profileSlug;
       }
 
-      router.push("/dashboard");
+      router.push(`/${profileSlug}`);
       router.refresh();
     } catch (error) {
       setMessage(getAuthSubmitErrorMessage(error));

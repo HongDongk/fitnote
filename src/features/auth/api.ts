@@ -22,7 +22,17 @@ async function ensureProfile(supabase: SupabaseClient<Database>, user: User) {
     { onConflict: "id", ignoreDuplicates: true },
   );
 
-  return error;
+  if (error) {
+    return { profileError: error, profileSlug: null };
+  }
+
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("slug")
+    .eq("id", user.id)
+    .single();
+
+  return { profileError, profileSlug: profile?.slug ?? null };
 }
 
 export async function signIn(values: LoginValues) {
@@ -32,8 +42,8 @@ export async function signIn(values: LoginValues) {
     throw error;
   }
 
-  const profileError = await ensureProfile(supabase, data.user);
-  return { ...data, profileError };
+  const profileResult = await ensureProfile(supabase, data.user);
+  return { ...data, ...profileResult };
 }
 
 export async function signUp({ email, password, displayName }: SignupValues) {
@@ -55,10 +65,10 @@ export async function signUp({ email, password, displayName }: SignupValues) {
     throw responseError;
   }
 
-  const profileError = data.session && data.user
+  const profileResult = data.session && data.user
     ? await ensureProfile(supabase, data.user)
-    : null;
-  return { ...data, profileError };
+    : { profileError: null, profileSlug: null };
+  return { ...data, ...profileResult };
 }
 
 export async function signOut() {

@@ -35,17 +35,10 @@ export async function updateSession(request: NextRequest) {
   const { data, error: authError } = await supabase.auth.getClaims();
   const pathname = request.nextUrl.pathname;
   const userId = data?.claims.sub;
+  const isInstructorRoute =
+    pathname === "/members" || pathname.startsWith("/members/");
 
-  if (
-    !authError &&
-    userId &&
-    pathname !== "/" &&
-    pathname !== "/mypage" &&
-    pathname !== "/auth/callback" &&
-    pathname !== "/auth/member/callback" &&
-    pathname !== "/api" &&
-    !pathname.startsWith("/api/")
-  ) {
+  if (!authError && userId && isInstructorRoute) {
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("bio, avatar_url")

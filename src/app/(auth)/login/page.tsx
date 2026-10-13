@@ -27,7 +27,15 @@ export default async function LoginPage({ searchParams }: LoginProps) {
   } = await supabase.auth.getUser();
 
   if (user && !error) {
-    redirect("/dashboard");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("slug")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile) {
+      redirect(`/${profile.slug}`);
+    }
   }
 
   return (

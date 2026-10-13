@@ -3,15 +3,18 @@
 import { Button, Stack, useTheme } from "@mui/material";
 import { usePathname } from "next/navigation";
 
-const navigationItems = [
-  { href: "/dashboard", label: "대시보드" },
-  { href: "/members", label: "회원관리" },
-  { href: "/mypage", label: "마이페이지" },
-];
-
-export default function HeaderNavigation() {
+export default function HeaderNavigation({
+  dashboardHref,
+}: {
+  dashboardHref: string;
+}) {
   const pathname = usePathname();
   const theme = useTheme();
+  const navigationItems = [
+    { href: dashboardHref, label: "레슨 대시보드" },
+    { href: "/members", label: "회원관리" },
+    { href: "/mypage", label: "마이페이지" },
+  ];
 
   return (
     <Stack

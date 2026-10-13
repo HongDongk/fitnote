@@ -14,6 +14,14 @@ export default async function Header({
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const { data: profile } =
+    user && showNavigation
+      ? await supabase
+          .from("profiles")
+          .select("slug")
+          .eq("id", user.id)
+          .maybeSingle()
+      : { data: null };
 
   return (
     <Box
@@ -76,7 +84,9 @@ export default async function Header({
             </Button>
           )}
         </Stack>
-        {user && showNavigation && <HeaderNavigation />}
+        {profile && showNavigation && (
+          <HeaderNavigation dashboardHref={`/${profile.slug}`} />
+        )}
       </Container>
     </Box>
   );

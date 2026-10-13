@@ -21,7 +21,15 @@ export default async function SignupPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/dashboard");
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("slug")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (profile) {
+      redirect(`/${profile.slug}`);
+    }
   }
 
   return (

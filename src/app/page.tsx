@@ -1,3 +1,4 @@
+import { createClient } from "@/src/lib/supabase/server";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
 import NotificationsNoneRoundedIcon from "@mui/icons-material/NotificationsNoneRounded";
@@ -35,7 +36,23 @@ const features = [
   },
 ];
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  const isLoggedIn = !error && Boolean(user);
+  const { data: profile } =
+    isLoggedIn && user
+      ? await supabase
+          .from("profiles")
+          .select("slug")
+          .eq("id", user.id)
+          .maybeSingle()
+      : { data: null };
+  const dashboardHref = profile ? `/${profile.slug}` : "/mypage";
+
   return (
     <Box sx={{ bgcolor: "#fbfcfa", color: "text.primary" }}>
       <Header />
@@ -90,7 +107,7 @@ export default function HomePage() {
                 혼자 운영해도 든든한 나만의 관리 노트, 핏노트.
               </Typography>
               <Button
-                href="/login"
+                href={isLoggedIn ? dashboardHref : "/login"}
                 variant="contained"
                 size="large"
                 color="primary"
@@ -278,7 +295,7 @@ export default function HomePage() {
                 PT, 필라테스, 음악, 댄스까지. 당신의 수업을 위한 작은 시작.
               </Typography>
               <Button
-                href="/signup"
+                href={isLoggedIn ? dashboardHref : "/signup"}
                 variant="contained"
                 size="large"
                 endIcon={<ArrowForwardRoundedIcon />}
@@ -293,7 +310,7 @@ export default function HomePage() {
                   "&:hover": { bgcolor: "#e7f3ec" },
                 }}
               >
-                계정 만들기
+                {isLoggedIn ? "시작하기" : "계정 만들기"}
               </Button>
             </Stack>
           </Paper>
