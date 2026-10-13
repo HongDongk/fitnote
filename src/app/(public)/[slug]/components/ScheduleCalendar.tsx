@@ -24,6 +24,15 @@ const timezone = "Asia/Seoul";
 const timeOptions = Array.from({ length: 49 }, (_, index) => index * 30);
 const subscribe = () => () => {};
 const dragPreviewId = "drag-preview";
+const eventColors: NonNullable<SchedulerEvent["color"]>[] = [
+  "blue",
+  "purple",
+  "orange",
+  "pink",
+  "teal",
+  "indigo",
+  "amber",
+];
 const timeGridColumnClass = "MuiEventCalendar-dayTimeGridColumn";
 
 function getDateParts(date: Date) {
@@ -217,7 +226,9 @@ export function ScheduleCalendar({ today }: { today: string }) {
       title: selection.title.trim(),
       start: start.toISOString(),
       end: end.toISOString(),
-      color: "green",
+      color:
+        events.find((item) => item.id === selection.id)?.color ??
+        eventColors[Math.floor(Math.random() * eventColors.length)],
     };
     setEvents((previous) =>
       selection.id === null
