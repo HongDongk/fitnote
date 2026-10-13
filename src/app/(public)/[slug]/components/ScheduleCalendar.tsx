@@ -12,7 +12,6 @@ import {
   Skeleton,
   Stack,
   TextField,
-  Typography,
   useMediaQuery,
   useTheme,
 } from "@mui/material";
@@ -230,28 +229,7 @@ export function ScheduleCalendar({ today }: { today: string }) {
   }
 
   return (
-    <Stack spacing={2.5}>
-      <Stack
-        direction="row"
-        spacing={1}
-        sx={{
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          rowGap: 1,
-        }}
-      >
-        <Typography component="h2" sx={{ fontSize: 22, fontWeight: 800 }}>
-          수업 스케줄
-        </Typography>
-      </Stack>
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ wordBreak: "keep-all" }}
-      >
-        빈 시간대를 눌러 수업 시간을 선택해보세요.
-      </Typography>
+    <Stack>
       <Box
         onPointerDown={handlePointerDown}
         onClickCapture={(event) => {
@@ -377,7 +355,7 @@ export function ScheduleCalendar({ today }: { today: string }) {
             sx={{
               height: "100%",
               "& .MuiEventCalendar-headerToolbar": { flexWrap: "wrap", gap: 1 },
-              "& .MuiEventCalendar-headerToolbarSidePanelToggle, & .MuiEventCalendar-headerToolbarCompactMenuButton, & .MuiEventCalendar-sidePanelCollapse":
+              "& .MuiEventCalendar-headerToolbarSidePanelToggle, & .MuiEventCalendar-headerToolbarCompactMenuButton, & .MuiEventCalendar-sidePanelCollapse, & .MuiEventCalendar-dayTimeGridAllDayEventsGrid":
                 { display: "none" },
               "& .MuiEventCalendar-headerToolbarActions": {
                 alignItems: "center",
@@ -402,7 +380,10 @@ export function ScheduleCalendar({ today }: { today: string }) {
                 color: "text.primary",
                 fontWeight: 700,
               },
-              "& .MuiEventCalendar-headerToolbarLabel": { fontWeight: 800 },
+              "& .MuiEventCalendar-headerToolbarLeftElement > p": {
+                fontWeight: 800,
+                color: "primary.main",
+              },
               "& .MuiEventCalendar-timeGridEvent": {
                 borderRadius: "8px",
                 "--time-grid-event-column-gap": "0px",

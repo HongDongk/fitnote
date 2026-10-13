@@ -168,6 +168,25 @@ export default async function InstructorDashboardPage({
                   </Typography>
                 </Box>
               </Stack>
+              {(isInstructor || isLoggedIn) && (
+                <Box>
+                  <Typography
+                    component="h2"
+                    sx={{ fontSize: { xs: 20, sm: 22 }, fontWeight: 800 }}
+                  >
+                    {isInstructor ? "나의 스케줄" : "일정 신청"}
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    color="text.secondary"
+                    sx={{ mt: 0.5, wordBreak: "keep-all" }}
+                  >
+                    {isInstructor
+                      ? "등록된 수업 일정을 확인하고 관리하세요."
+                      : "원하는 시간대를 선택해 수업을 신청해보세요."}
+                  </Typography>
+                </Box>
+              )}
               <ScheduleCalendar today={new Date().toISOString()} />
             </Stack>
           </Paper>
