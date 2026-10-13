@@ -187,7 +187,11 @@ export default async function InstructorDashboardPage({
                   </Typography>
                 </Box>
               )}
-              <ScheduleCalendar today={new Date().toISOString()} />
+              <ScheduleCalendar
+                today={new Date().toISOString()}
+                instructorId={profile.id}
+                canEdit={isInstructor}
+              />
             </Stack>
           </Paper>
         </Stack>

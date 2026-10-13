@@ -18,13 +18,21 @@ import {
 import { EventCalendar } from "@mui/x-scheduler/event-calendar";
 import type { SchedulerEvent } from "@mui/x-scheduler/models";
 import { ko } from "date-fns/locale";
-import { useRef, useState, useSyncExternalStore } from "react";
+import { useMemo, useRef, useState, useSyncExternalStore } from "react";
+
+import type { SaveScheduleInput } from "@/src/features/schedules/api";
+import { getScheduleErrorMessage } from "@/src/features/schedules/errors";
+import {
+  useDeleteSchedule,
+  useInstructorSchedules,
+  useSaveSchedule,
+} from "@/src/features/schedules/hooks";
 
 const timezone = "Asia/Seoul";
 const timeOptions = Array.from({ length: 49 }, (_, index) => index * 30);
 const subscribe = () => () => {};
 const dragPreviewId = "drag-preview";
-const eventColors: NonNullable<SchedulerEvent["color"]>[] = [
+const eventColors: SaveScheduleInput["color"][] = [
   "blue",
   "purple",
   "orange",
@@ -64,32 +72,6 @@ function formatTime(minutes: number) {
   return `${String(Math.floor(minutes / 60)).padStart(2, "0")}:${String(minutes % 60).padStart(2, "0")}`;
 }
 
-function createSampleEvents(date: string): SchedulerEvent[] {
-  return [
-    {
-      id: "sample-pt",
-      title: "샘플 · PT 수업",
-      start: getDateTime(date, 9 * 60).toISOString(),
-      end: getDateTime(date, 10 * 60).toISOString(),
-      color: "green",
-    },
-    {
-      id: "sample-pilates",
-      title: "샘플 · 필라테스",
-      start: getDateTime(date, 14 * 60).toISOString(),
-      end: getDateTime(date, 15 * 60).toISOString(),
-      color: "blue",
-    },
-    {
-      id: "sample-lesson",
-      title: "샘플 · 개인 레슨",
-      start: getDateTime(date, 18 * 60 + 30).toISOString(),
-      end: getDateTime(date, 19 * 60 + 30).toISOString(),
-      color: "purple",
-    },
-  ];
-}
-
 function getColumnDate(
   visibleDate: string,
   view: "day" | "week",
@@ -113,7 +95,15 @@ type Selection = {
   title: string;
 };
 
-export function ScheduleCalendar({ today }: { today: string }) {
+export function ScheduleCalendar({
+  today,
+  instructorId,
+  canEdit,
+}: {
+  today: string;
+  instructorId: string;
+  canEdit: boolean;
+}) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isClient = useSyncExternalStore(
@@ -122,8 +112,19 @@ export function ScheduleCalendar({ today }: { today: string }) {
     () => false,
   );
   const initialDate = getDateParts(new Date(today)).date;
-  const [events, setEvents] = useState<SchedulerEvent[]>(() =>
-    createSampleEvents(initialDate),
+  const schedulesQuery = useInstructorSchedules(instructorId);
+  const saveSchedule = useSaveSchedule(instructorId);
+  const removeSchedule = useDeleteSchedule(instructorId);
+  const events = useMemo<SchedulerEvent[]>(
+    () =>
+      (schedulesQuery.data ?? []).map((schedule) => ({
+        id: schedule.id,
+        title: schedule.title,
+        start: schedule.starts_at,
+        end: schedule.ends_at,
+        color: schedule.color as SaveScheduleInput["color"],
+      })),
+    [schedulesQuery.data],
   );
   const [visibleDate, setVisibleDate] = useState(() =>
     getDateTime(initialDate, 12 * 60),
@@ -131,9 +132,9 @@ export function ScheduleCalendar({ today }: { today: string }) {
   const [view, setView] = useState<"day" | "week" | "month" | "agenda">("week");
   const [selection, setSelection] = useState<Selection | null>(null);
   const [error, setError] = useState("");
+  const [calendarError, setCalendarError] = useState("");
   const [dragRange, setDragRange] = useState<DragRange | null>(null);
   const dialogTrigger = useRef<HTMLElement | null>(null);
-  const nextEventId = useRef(0);
   const suppressClick = useRef(false);
   const currentView = isMobile ? "day" : view;
 
@@ -145,6 +146,7 @@ export function ScheduleCalendar({ today }: { today: string }) {
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     suppressClick.current = false;
+    if (!canEdit) return;
     if (event.button !== 0 || event.pointerType === "touch") return;
     if (currentView !== "day" && currentView !== "week") return;
     const target = event.target as HTMLElement;
@@ -221,26 +223,54 @@ export function ScheduleCalendar({ today }: { today: string }) {
 
     const start = getDateTime(selection.date, selection.start);
     const end = getDateTime(selection.date, selection.end);
-    const event: SchedulerEvent = {
-      id: selection.id ?? `demo-${nextEventId.current++}`,
-      title: selection.title.trim(),
-      start: start.toISOString(),
-      end: end.toISOString(),
-      color:
-        events.find((item) => item.id === selection.id)?.color ??
-        eventColors[Math.floor(Math.random() * eventColors.length)],
-    };
-    setEvents((previous) =>
-      selection.id === null
-        ? [...previous, event]
-        : previous.map((item) => (item.id === selection.id ? event : item)),
+    const color =
+      (events.find((item) => item.id === selection.id)?.color as
+        | SaveScheduleInput["color"]
+        | undefined) ??
+      eventColors[Math.floor(Math.random() * eventColors.length)];
+    saveSchedule.mutate(
+      {
+        scheduleId: selection.id === null ? null : String(selection.id),
+        values: {
+          title: selection.title,
+          startsAt: start.toISOString(),
+          endsAt: end.toISOString(),
+          color,
+        },
+      },
+      {
+        onSuccess: () => {
+          setVisibleDate(start);
+          closeDialog();
+        },
+        onError: (saveError) => setError(getScheduleErrorMessage(saveError)),
+      },
     );
-    setVisibleDate(start);
-    closeDialog();
   }
 
+  function deleteSelection() {
+    if (selection?.id == null) return;
+    removeSchedule.mutate(String(selection.id), {
+      onSuccess: closeDialog,
+      onError: (deleteError) => setError(getScheduleErrorMessage(deleteError)),
+    });
+  }
+
+  const isSaving = saveSchedule.isPending || removeSchedule.isPending;
+  const loadError = schedulesQuery.isError
+    ? getScheduleErrorMessage(schedulesQuery.error)
+    : "";
+
   return (
-    <Stack>
+    <Stack spacing={2}>
+      {(loadError || calendarError) && (
+        <Alert
+          severity="error"
+          onClose={calendarError ? () => setCalendarError("") : undefined}
+        >
+          {calendarError || loadError}
+        </Alert>
+      )}
       <Box
         onPointerDown={handlePointerDown}
         onClickCapture={(event) => {
@@ -255,7 +285,7 @@ export function ScheduleCalendar({ today }: { today: string }) {
           overflow: "hidden",
         }}
       >
-        {isClient ? (
+        {isClient && !schedulesQuery.isPending ? (
           <EventCalendar
             events={
               dragRange
@@ -278,9 +308,17 @@ export function ScheduleCalendar({ today }: { today: string }) {
                   ]
                 : events
             }
-            onEventsChange={(nextEvents) =>
-              setEvents(nextEvents.filter((item) => item.id !== dragPreviewId))
-            }
+            onEventsChange={(nextEvents) => {
+              const nextIds = new Set(nextEvents.map((item) => item.id));
+              for (const item of events) {
+                if (nextIds.has(item.id)) continue;
+                removeSchedule.mutate(String(item.id), {
+                  onError: (deleteError) =>
+                    setCalendarError(getScheduleErrorMessage(deleteError)),
+                });
+              }
+            }}
+            readOnly={!canEdit}
             visibleDate={visibleDate}
             onVisibleDateChange={setVisibleDate}
             view={currentView}
@@ -294,7 +332,9 @@ export function ScheduleCalendar({ today }: { today: string }) {
               weekStartsOn: 1,
             }}
             preferencesMenuConfig={false}
-            eventCreation={{ interaction: "click", duration: 30 }}
+            eventCreation={
+              canEdit ? { interaction: "click", duration: 30 } : false
+            }
             areEventsDraggable={false}
             areEventsResizable={false}
             viewConfig={{
@@ -332,6 +372,7 @@ export function ScheduleCalendar({ today }: { today: string }) {
             }}
             onEventEditingStart={(_, details) => {
               details.cancel();
+              if (!canEdit) return;
               dialogTrigger.current = details.anchor ?? null;
               if (document.activeElement instanceof HTMLElement) {
                 document.activeElement.blur();
@@ -442,7 +483,7 @@ export function ScheduleCalendar({ today }: { today: string }) {
             id="schedule-selection-title"
             sx={{ fontSize: 22, fontWeight: 800, px: 3, pt: 3 }}
           >
-            수업 시간 선택
+            {selection?.id == null ? "수업 등록" : "수업 수정"}
           </DialogTitle>
           <DialogContent sx={{ px: 3 }}>
             {selection && (
@@ -523,11 +564,32 @@ export function ScheduleCalendar({ today }: { today: string }) {
             )}
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            <Button variant="outlined" onClick={closeDialog} fullWidth>
+            {selection?.id != null && (
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={deleteSelection}
+                disabled={isSaving}
+                fullWidth
+              >
+                삭제
+              </Button>
+            )}
+            <Button
+              variant="outlined"
+              onClick={closeDialog}
+              disabled={isSaving}
+              fullWidth
+            >
               취소
             </Button>
-            <Button type="submit" variant="contained" fullWidth>
-              수업 등록
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSaving}
+              fullWidth
+            >
+              {selection?.id == null ? "수업 등록" : "저장"}
             </Button>
           </DialogActions>
         </Box>
