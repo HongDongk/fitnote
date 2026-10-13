@@ -7,19 +7,31 @@ import {
   memberMessages,
 } from "@/src/features/members/errors";
 import { ApiError } from "@/src/lib/api/error";
-import { memberCallbackSchema } from "@/src/lib/schemas/memberSchemas";
+import {
+  memberCallbackSchema,
+  memberLinkSchema,
+} from "@/src/lib/schemas/memberSchemas";
 import { createClient } from "@/src/lib/supabase/server";
 
 const responseHeaders = {
   "Cache-Control": "private, no-store",
   "Referrer-Policy": "no-referrer",
+  Vary: "Accept",
 };
 
 export async function GET(request: Request) {
   let authenticated = false;
+  const requestUrl = new URL(request.url);
+  const slugResult = memberLinkSchema.safeParse({
+    instructorSlug: requestUrl.searchParams.get("instructorSlug"),
+  });
+  const isBrowser = request.headers.get("accept")?.includes("text/html");
+  const returnUrl = slugResult.success
+    ? new URL(`/${slugResult.data.instructorSlug}`, requestUrl.origin)
+    : null;
 
   try {
-    const { searchParams } = new URL(request.url);
+    const { searchParams } = requestUrl;
     const result = memberCallbackSchema.safeParse({
       instructorSlug: searchParams.get("instructorSlug"),
       code: searchParams.get("code") ?? undefined,
@@ -71,12 +83,34 @@ export async function GET(request: Request) {
       throw new ApiError(memberMessages.notLinked, 404);
     }
 
+    if (isBrowser && returnUrl) {
+      return NextResponse.redirect(returnUrl, {
+        status: 303,
+        headers: responseHeaders,
+      });
+    }
+
     return NextResponse.json(
       { authenticated, memberId },
       { headers: responseHeaders },
     );
   } catch (error) {
     const requestError = getMemberCallbackError(error);
+    if (isBrowser && returnUrl) {
+      returnUrl.searchParams.set(
+        "memberError",
+        requestError.status >= 500
+          ? "callback"
+          : authenticated &&
+              requestError.message !== memberMessages.verificationRequired
+            ? "link"
+            : "auth",
+      );
+      return NextResponse.redirect(returnUrl, {
+        status: 303,
+        headers: responseHeaders,
+      });
+    }
     return NextResponse.json(
       {
         authenticated,

@@ -65,11 +65,11 @@ export function useLinkMemberAccount() {
   });
 }
 
-export function useMyMember(instructorSlug: string) {
+export function useMyMember(instructorSlug: string, accountId: string | null) {
   return useQuery({
-    queryKey: ["members", "mine", instructorSlug],
+    queryKey: ["members", "mine", instructorSlug, accountId],
     queryFn: () => getMyMember({ instructorSlug }),
-    enabled: Boolean(instructorSlug),
+    enabled: Boolean(instructorSlug && accountId),
     staleTime: 0,
     gcTime: 0,
     retry: false,

@@ -1,14 +1,14 @@
 "use client";
 
+import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
+import { Alert, Button, CircularProgress, Stack } from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import { Alert, Button, CircularProgress, Stack } from "@mui/material";
-import LogoutRoundedIcon from "@mui/icons-material/LogoutRounded";
 
-import { useLogout } from "@/src/features/auth/hooks";
 import { getLogoutErrorMessage } from "@/src/features/auth/errors";
+import { useLogout } from "@/src/features/auth/hooks";
 
-export function LogoutButton() {
+export function LogoutButton({ redirectTo = "/" }: { redirectTo?: string }) {
   const router = useRouter();
   const logout = useLogout();
   const isLoading = logout.isPending;
@@ -24,7 +24,7 @@ export function LogoutButton() {
     try {
       await logout.mutateAsync();
 
-      router.push("/");
+      router.push(redirectTo);
       router.refresh();
     } catch (error) {
       setErrorMessage(getLogoutErrorMessage(error));

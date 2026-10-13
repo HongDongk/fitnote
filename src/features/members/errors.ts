@@ -72,6 +72,19 @@ export function getMemberCallbackError(error: unknown) {
     : new ApiError(memberMessages.callbackFailed, 500);
 }
 
+export function getMemberCallbackMessage(key: string | undefined) {
+  if (key === "auth") {
+    return memberMessages.callbackInvalid;
+  }
+  if (key === "link") {
+    return memberMessages.notLinked;
+  }
+  if (key === "callback") {
+    return memberMessages.callbackFailed;
+  }
+  return "";
+}
+
 export function getMemberReadError(error: unknown) {
   return error instanceof ApiError
     ? error

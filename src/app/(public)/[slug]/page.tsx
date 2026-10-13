@@ -14,11 +14,14 @@ import { notFound, redirect } from "next/navigation";
 import Header from "@/src/app/components/Header/Header";
 import { memberLinkSchema } from "@/src/lib/schemas/memberSchemas";
 import { createClient } from "@/src/lib/supabase/server";
+import { MemberAccess } from "./components/MemberAccess";
 
 export default async function InstructorDashboardPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ memberError?: string | string[] }>;
 }) {
   const { slug } = await params;
   const result = memberLinkSchema.safeParse({ instructorSlug: slug });
@@ -58,6 +61,10 @@ export default async function InstructorDashboardPage({
     error: authError,
   } = await supabase.auth.getUser();
   const isInstructor = !authError && user?.id === profile.id;
+  const isLoggedIn = !authError && Boolean(user);
+  const { memberError } = await searchParams;
+  const authUnavailable =
+    authError && authError.name !== "AuthSessionMissingError";
 
   if (isInstructor && (!profile.bio?.trim() || !profile.avatar_url?.trim())) {
     redirect("/mypage");
@@ -65,9 +72,44 @@ export default async function InstructorDashboardPage({
 
   return (
     <Box sx={{ minHeight: "100dvh", bgcolor: "background.default" }}>
-      <Header showNavigation={isInstructor} />
+      <Header
+        showNavigation={isInstructor}
+        showLogin={false}
+        logoutRedirectTo={`/${slug}`}
+        instructorId={profile.id}
+      />
       <Container component="main" maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
         <Stack spacing={3}>
+          {!isLoggedIn && (
+            <Paper
+              elevation={0}
+              sx={{
+                p: { xs: 3, sm: 4 },
+                borderRadius: "24px",
+                border: "1px solid #e2ebe5",
+              }}
+            >
+              {authUnavailable ? (
+                <Alert
+                  severity="error"
+                  action={
+                    <Button href={`/${slug}`} color="inherit">
+                      재시도
+                    </Button>
+                  }
+                >
+                  로그인 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.
+                </Alert>
+              ) : (
+                <MemberAccess
+                  instructorSlug={slug}
+                  initialError={
+                    typeof memberError === "string" ? memberError : undefined
+                  }
+                />
+              )}
+            </Paper>
+          )}
           <Paper
             elevation={0}
             sx={{
