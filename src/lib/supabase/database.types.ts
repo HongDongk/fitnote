@@ -14,6 +14,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      booking_requests: {
+        Row: {
+          created_at: string
+          decided_at: string | null
+          ends_at: string
+          id: string
+          instructor_id: string
+          member_id: string
+          schedule_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          decided_at?: string | null
+          ends_at: string
+          id?: string
+          instructor_id: string
+          member_id: string
+          schedule_id?: string | null
+          starts_at: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          decided_at?: string | null
+          ends_at?: string
+          id?: string
+          instructor_id?: string
+          member_id?: string
+          schedule_id?: string | null
+          starts_at?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_requests_instructor_id_fkey"
+            columns: ["instructor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_requests_member_id_instructor_id_fkey"
+            columns: ["member_id", "instructor_id"]
+            isOneToOne: false
+            referencedRelation: "members"
+            referencedColumns: ["id", "instructor_id"]
+          },
+          {
+            foreignKeyName: "booking_requests_schedule_id_fkey"
+            columns: ["schedule_id"]
+            isOneToOne: true
+            referencedRelation: "schedules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       members: {
         Row: {
           auth_user_id: string | null
@@ -128,9 +189,97 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      approve_booking_request: {
+        Args: { request_id: string }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          ends_at: string
+          id: string
+          instructor_id: string
+          member_id: string
+          schedule_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      cancel_booking_request: {
+        Args: { request_id: string }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          ends_at: string
+          id: string
+          instructor_id: string
+          member_id: string
+          schedule_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       link_member_account: {
         Args: { instructor_slug: string }
         Returns: string
+      }
+      reject_booking_request: {
+        Args: { request_id: string }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          ends_at: string
+          id: string
+          instructor_id: string
+          member_id: string
+          schedule_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      request_booking: {
+        Args: {
+          requested_ends_at: string
+          requested_starts_at: string
+          target_instructor_id: string
+        }
+        Returns: {
+          created_at: string
+          decided_at: string | null
+          ends_at: string
+          id: string
+          instructor_id: string
+          member_id: string
+          schedule_id: string | null
+          starts_at: string
+          status: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "booking_requests"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
     }
     Enums: {
