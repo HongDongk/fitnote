@@ -414,7 +414,7 @@ export function ScheduleCalendar({
                 gap: 1,
               },
               "& .MuiEventCalendar-headerToolbarDateNavigator": { gap: 1 },
-              "& .MuiEventCalendar-headerToolbarPreviousButton, & .MuiEventCalendar-headerToolbarNextButton, & .MuiEventCalendar-headerToolbarCompactTodayButton":
+              "& .MuiEventCalendar-headerToolbarPreviousButton, & .MuiEventCalendar-headerToolbarNextButton":
                 {
                   width: 40,
                   height: 40,
@@ -423,14 +423,33 @@ export function ScheduleCalendar({
                   borderRadius: "10px",
                   color: "text.primary",
                 },
+              "& .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-headerToolbarCompactTodayButton":
+                {
+                  height: 40,
+                  minHeight: 40,
+                  border: 0,
+                  bgcolor: "primary.light",
+                  color: "primary.dark",
+                  boxShadow: "none",
+                  transition: "background-color 160ms ease",
+                  "&:hover": { bgcolor: "#dceadf" },
+                  "&.Mui-focusVisible": {
+                    outline: "2px solid",
+                    outlineColor: "primary.main",
+                    outlineOffset: 3,
+                  },
+                },
               "& .MuiEventCalendar-headerToolbarTodayButton": {
-                height: 40,
+                minWidth: 72,
                 px: 2,
-                border: 1,
-                borderColor: "divider",
-                borderRadius: "10px",
-                color: "text.primary",
+                borderRadius: "999px",
+                fontSize: 13,
                 fontWeight: 700,
+              },
+              "& .MuiEventCalendar-headerToolbarCompactTodayButton": {
+                width: 40,
+                borderRadius: "12px",
+                "& .MuiSvgIcon-root": { fontSize: 20 },
               },
               "& .MuiEventCalendar-headerToolbarLeftElement > p": {
                 fontWeight: 800,
