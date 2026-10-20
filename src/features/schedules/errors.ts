@@ -40,7 +40,16 @@ export function getScheduleDatabaseError(
     return new ApiError(scheduleMessages.notReady, 503);
   }
   if (error.code === "23514") {
+    if (error.message.includes("Approved booking schedule is immutable")) {
+      return new ApiError("승인된 수업의 시간은 변경할 수 없습니다.", 409);
+    }
     return new ApiError(scheduleMessages.invalidInput, 400);
+  }
+  if (error.code === "23P01") {
+    return new ApiError(
+      "승인된 수업과 시간이 겹칩니다. 다른 시간대를 선택해주세요.",
+      409,
+    );
   }
   return new ApiError(fallback, 500);
 }
@@ -50,5 +59,7 @@ export function getScheduleRequestError(error: unknown, fallback: string) {
 }
 
 export function getScheduleErrorMessage(error: unknown) {
-  return error instanceof ApiError ? error.message : scheduleMessages.readFailed;
+  return error instanceof ApiError
+    ? error.message
+    : scheduleMessages.readFailed;
 }

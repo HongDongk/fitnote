@@ -10,6 +10,7 @@ import {
   DialogTitle,
   MenuItem,
   Skeleton,
+  Snackbar,
   Stack,
   TextField,
   useMediaQuery,
@@ -20,12 +21,15 @@ import type { SchedulerEvent } from "@mui/x-scheduler/models";
 import { ko } from "date-fns/locale";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
+import { getBookingErrorMessage } from "@/src/features/bookings/errors";
+import { useRequestBooking } from "@/src/features/bookings/hooks";
 import type { SaveScheduleInput } from "@/src/features/schedules/api";
 import { getScheduleErrorMessage } from "@/src/features/schedules/errors";
 import {
   useDeleteSchedule,
   useInstructorSchedules,
   useSaveSchedule,
+  useScheduleRealtime,
 } from "@/src/features/schedules/hooks";
 
 const timezone = "Asia/Seoul";
@@ -99,10 +103,14 @@ export function ScheduleCalendar({
   today,
   instructorId,
   canEdit,
+  canRequest = false,
+  accountId = null,
 }: {
   today: string;
   instructorId: string;
   canEdit: boolean;
+  canRequest?: boolean;
+  accountId?: string | null;
 }) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -113,8 +121,10 @@ export function ScheduleCalendar({
   );
   const initialDate = getDateParts(new Date(today)).date;
   const schedulesQuery = useInstructorSchedules(instructorId);
+  useScheduleRealtime(instructorId);
   const saveSchedule = useSaveSchedule(instructorId);
   const removeSchedule = useDeleteSchedule(instructorId);
+  const requestBooking = useRequestBooking(instructorId, accountId);
   const events = useMemo<SchedulerEvent[]>(
     () =>
       (schedulesQuery.data ?? []).map((schedule) => ({
@@ -123,8 +133,9 @@ export function ScheduleCalendar({
         start: schedule.starts_at,
         end: schedule.ends_at,
         color: schedule.color as SaveScheduleInput["color"],
+        readOnly: !canEdit,
       })),
-    [schedulesQuery.data],
+    [schedulesQuery.data, canEdit],
   );
   const [visibleDate, setVisibleDate] = useState(() =>
     getDateTime(initialDate, 12 * 60),
@@ -133,12 +144,20 @@ export function ScheduleCalendar({
   const [selection, setSelection] = useState<Selection | null>(null);
   const [error, setError] = useState("");
   const [calendarError, setCalendarError] = useState("");
+  const [notice, setNotice] = useState("");
   const [dragRange, setDragRange] = useState<DragRange | null>(null);
   const dialogTrigger = useRef<HTMLElement | null>(null);
   const suppressClick = useRef(false);
+  const submitting = useRef(false);
   const currentView = isMobile ? "day" : view;
+  const canSelect = (canEdit || canRequest) && schedulesQuery.isSuccess;
+  const isSaving =
+    saveSchedule.isPending ||
+    removeSchedule.isPending ||
+    requestBooking.isPending;
 
   function closeDialog() {
+    if (submitting.current) return;
     setSelection(null);
     setDragRange(null);
     setError("");
@@ -146,7 +165,7 @@ export function ScheduleCalendar({
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     suppressClick.current = false;
-    if (!canEdit) return;
+    if (!canSelect || isSaving) return;
     if (event.button !== 0 || event.pointerType === "touch") return;
     if (currentView !== "day" && currentView !== "week") return;
     const target = event.target as HTMLElement;
@@ -207,8 +226,8 @@ export function ScheduleCalendar({
   }
 
   function confirmSelection() {
-    if (!selection) return;
-    if (!selection.title.trim()) {
+    if (!selection || submitting.current || !canSelect) return;
+    if (canEdit && !selection.title.trim()) {
       setError("수업 이름을 입력해주세요.");
       return;
     }
@@ -223,11 +242,51 @@ export function ScheduleCalendar({
 
     const start = getDateTime(selection.date, selection.start);
     const end = getDateTime(selection.date, selection.end);
+    if (!Number.isFinite(start.getTime()) || !Number.isFinite(end.getTime())) {
+      setError("날짜와 시간을 확인해주세요.");
+      return;
+    }
+    if (!canEdit) {
+      if (!canRequest) return;
+      if (start.getTime() <= Date.now()) {
+        setError("현재 시간 이후로 신청해주세요.");
+        return;
+      }
+      if (
+        events.some(
+          (item) =>
+            new Date(String(item.start)) < end &&
+            new Date(String(item.end)) > start,
+        )
+      ) {
+        setError("이미 수업이 있는 시간입니다. 다른 시간대를 선택해주세요.");
+        return;
+      }
+      submitting.current = true;
+      requestBooking.mutate(
+        { startsAt: start.toISOString(), endsAt: end.toISOString() },
+        {
+          onSuccess: () => {
+            submitting.current = false;
+            setVisibleDate(start);
+            closeDialog();
+            setNotice("수업을 신청했어요. 강사님이 확인하면 확정됩니다.");
+          },
+          onError: (requestError) =>
+            setError(getBookingErrorMessage(requestError)),
+          onSettled: () => {
+            submitting.current = false;
+          },
+        },
+      );
+      return;
+    }
     const color =
       (events.find((item) => item.id === selection.id)?.color as
         | SaveScheduleInput["color"]
         | undefined) ??
       eventColors[Math.floor(Math.random() * eventColors.length)];
+    submitting.current = true;
     saveSchedule.mutate(
       {
         scheduleId: selection.id === null ? null : String(selection.id),
@@ -240,23 +299,33 @@ export function ScheduleCalendar({
       },
       {
         onSuccess: () => {
+          submitting.current = false;
           setVisibleDate(start);
           closeDialog();
         },
         onError: (saveError) => setError(getScheduleErrorMessage(saveError)),
+        onSettled: () => {
+          submitting.current = false;
+        },
       },
     );
   }
 
   function deleteSelection() {
-    if (selection?.id == null) return;
+    if (selection?.id == null || !canEdit || submitting.current) return;
+    submitting.current = true;
     removeSchedule.mutate(String(selection.id), {
-      onSuccess: closeDialog,
+      onSuccess: () => {
+        submitting.current = false;
+        closeDialog();
+      },
       onError: (deleteError) => setError(getScheduleErrorMessage(deleteError)),
+      onSettled: () => {
+        submitting.current = false;
+      },
     });
   }
 
-  const isSaving = saveSchedule.isPending || removeSchedule.isPending;
   const loadError = schedulesQuery.isError
     ? getScheduleErrorMessage(schedulesQuery.error)
     : "";
@@ -309,6 +378,7 @@ export function ScheduleCalendar({
                 : events
             }
             onEventsChange={(nextEvents) => {
+              if (!canEdit || isSaving) return;
               const nextIds = new Set(nextEvents.map((item) => item.id));
               for (const item of events) {
                 if (nextIds.has(item.id)) continue;
@@ -318,7 +388,7 @@ export function ScheduleCalendar({
                 });
               }
             }}
-            readOnly={!canEdit}
+            readOnly={!canSelect}
             visibleDate={visibleDate}
             onVisibleDateChange={setVisibleDate}
             view={currentView}
@@ -333,7 +403,7 @@ export function ScheduleCalendar({
             }}
             preferencesMenuConfig={false}
             eventCreation={
-              canEdit ? { interaction: "click", duration: 30 } : false
+              canSelect ? { interaction: "click", duration: 30 } : false
             }
             areEventsDraggable={false}
             areEventsResizable={false}
@@ -372,7 +442,12 @@ export function ScheduleCalendar({
             }}
             onEventEditingStart={(_, details) => {
               details.cancel();
-              if (!canEdit) return;
+              if (
+                !canSelect ||
+                isSaving ||
+                (!canEdit && details.reason !== "creation")
+              )
+                return;
               dialogTrigger.current = details.anchor ?? null;
               if (document.activeElement instanceof HTMLElement) {
                 document.activeElement.blur();
@@ -502,7 +577,11 @@ export function ScheduleCalendar({
             id="schedule-selection-title"
             sx={{ fontSize: 22, fontWeight: 800, px: 3, pt: 3 }}
           >
-            {selection?.id == null ? "수업 등록" : "수업 수정"}
+            {!canEdit
+              ? "수업 신청"
+              : selection?.id == null
+                ? "수업 등록"
+                : "수업 수정"}
           </DialogTitle>
           <DialogContent sx={{ px: 3 }}>
             {selection && (
@@ -513,21 +592,29 @@ export function ScheduleCalendar({
                   "& .MuiInputBase-root": { minHeight: 56 },
                 }}
               >
-                <TextField
-                  label="수업 이름"
-                  value={selection.title}
-                  required
-                  slotProps={{ htmlInput: { maxLength: 80 } }}
-                  onChange={(event) => {
-                    setSelection({ ...selection, title: event.target.value });
-                    setError("");
-                  }}
-                />
+                {canEdit ? (
+                  <TextField
+                    label="수업 이름"
+                    value={selection.title}
+                    required
+                    disabled={isSaving}
+                    slotProps={{ htmlInput: { maxLength: 80 } }}
+                    onChange={(event) => {
+                      setSelection({ ...selection, title: event.target.value });
+                      setError("");
+                    }}
+                  />
+                ) : (
+                  <Alert severity="info">
+                    선택한 시간은 강사님 승인 후 확정됩니다.
+                  </Alert>
+                )}
                 <TextField
                   label="날짜"
                   type="date"
                   value={selection.date}
                   required
+                  disabled={isSaving}
                   slotProps={{ inputLabel: { shrink: true } }}
                   onChange={(event) => {
                     setSelection({ ...selection, date: event.target.value });
@@ -538,6 +625,7 @@ export function ScheduleCalendar({
                   <TextField
                     select
                     label="시작 시간"
+                    disabled={isSaving}
                     value={selection.start}
                     onChange={(event) => {
                       const start = Number(event.target.value);
@@ -560,6 +648,7 @@ export function ScheduleCalendar({
                   <TextField
                     select
                     label="종료 시간"
+                    disabled={isSaving}
                     value={selection.end}
                     onChange={(event) => {
                       setSelection({
@@ -583,7 +672,7 @@ export function ScheduleCalendar({
             )}
           </DialogContent>
           <DialogActions sx={{ p: 3 }}>
-            {selection?.id != null && (
+            {canEdit && selection?.id != null && (
               <Button
                 variant="outlined"
                 color="error"
@@ -608,11 +697,34 @@ export function ScheduleCalendar({
               disabled={isSaving}
               fullWidth
             >
-              {selection?.id == null ? "수업 등록" : "저장"}
+              {isSaving
+                ? "처리 중…"
+                : !canEdit
+                  ? "신청하기"
+                  : selection?.id == null
+                    ? "수업 등록"
+                    : "저장"}
             </Button>
           </DialogActions>
         </Box>
       </Dialog>
+      <Snackbar
+        open={Boolean(notice)}
+        autoHideDuration={4000}
+        onClose={(_, reason) => {
+          if (reason !== "clickaway") setNotice("");
+        }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity="success"
+          variant="filled"
+          onClose={() => setNotice("")}
+          sx={{ width: "100%", borderRadius: "14px" }}
+        >
+          {notice}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }
