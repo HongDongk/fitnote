@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: `${siteName} - 1인 강사를 위한 회원 관리·수업 예약`,
+    default: `${siteName}`,
     template: `%s | ${siteName}`,
   },
   description: siteDescription,
