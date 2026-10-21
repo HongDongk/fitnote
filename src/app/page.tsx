@@ -140,9 +140,6 @@ export default async function HomePage() {
               >
                 핏노트 시작하기
               </Button>
-              <Typography variant="caption" color="text.secondary">
-                현재는 계정 생성과 강사 프로필 확인을 이용할 수 있어요.
-              </Typography>
             </Stack>
 
             <Paper
