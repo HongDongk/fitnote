@@ -1,9 +1,11 @@
+import { GoogleAnalytics } from "@next/third-parties/google";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { MuiProvider } from "@/src/lib/providers/MuiProvider";
 import { QueryProvider } from "@/src/lib/providers/QueryProvider";
+import { siteDescription, siteName, siteUrl } from "@/src/lib/site";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,9 +18,23 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FitNote",
-  description: "1인 강사를 위한 회원 관리 서비스",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: `${siteName} - 1인 강사를 위한 회원 관리·수업 예약`,
+    template: `%s | ${siteName}`,
+  },
+  description: siteDescription,
+  applicationName: siteName,
+  openGraph: {
+    type: "website",
+    siteName,
+    locale: "ko_KR",
+    images: [{ url: "/images/logo.png", width: 512, height: 512 }],
+  },
+  twitter: { card: "summary" },
 };
+
+const gaId = process.env.NEXT_PUBLIC_GA_ID;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
@@ -28,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           <MuiProvider>{children}</MuiProvider>
         </QueryProvider>
       </body>
+      {gaId && <GoogleAnalytics gaId={gaId} />}
     </html>
   );
 }

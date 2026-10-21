@@ -8,14 +8,59 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
 import Header from "@/src/app/components/Header/Header";
 import { memberLinkSchema } from "@/src/lib/schemas/memberSchemas";
+import { siteName } from "@/src/lib/site";
 import { createClient } from "@/src/lib/supabase/server";
 import { BookingRequests } from "./components/BookingRequests";
 import { MemberAccess } from "./components/MemberAccess";
 import { ScheduleCalendar } from "./components/ScheduleCalendar";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const result = memberLinkSchema.safeParse({ instructorSlug: slug });
+  if (!result.success) return {};
+
+  const supabase = await createClient();
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("display_name,bio,avatar_url")
+    .eq("slug", result.data.instructorSlug)
+    .maybeSingle();
+  if (!profile) return {};
+
+  const title = `${profile.display_name} 강사님 수업 일정·예약`;
+  const description = (
+    profile.bio?.trim() ||
+    `${profile.display_name} 강사님의 수업 일정을 확인하고 ${siteName}에서 바로 신청하세요.`
+  )
+    .replace(/\s+/g, " ")
+    .slice(0, 160);
+  const path = `/${result.data.instructorSlug}`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: path },
+    robots: { index: false, follow: true },
+    openGraph: {
+      type: "profile",
+      siteName,
+      locale: "ko_KR",
+      url: path,
+      title,
+      description,
+      images: [{ url: profile.avatar_url || "/images/logo.png" }],
+    },
+  };
+}
 
 export default async function InstructorDashboardPage({
   params,

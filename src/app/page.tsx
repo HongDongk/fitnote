@@ -1,3 +1,6 @@
+import type { Metadata } from "next";
+
+import { siteDescription, siteName, siteUrl, toJsonLd } from "@/src/lib/site";
 import { createClient } from "@/src/lib/supabase/server";
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CalendarMonthRoundedIcon from "@mui/icons-material/CalendarMonthRounded";
@@ -36,6 +39,22 @@ const features = [
   },
 ];
 
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: siteName,
+  alternateName: "FitNote",
+  url: siteUrl,
+  description: siteDescription,
+  applicationCategory: "BusinessApplication",
+  operatingSystem: "Web",
+  inLanguage: "ko-KR",
+};
+
 export default async function HomePage() {
   const supabase = await createClient();
   const {
@@ -55,6 +74,10 @@ export default async function HomePage() {
 
   return (
     <Box sx={{ bgcolor: "#fbfcfa", color: "text.primary" }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: toJsonLd(jsonLd) }}
+      />
       <Header />
 
       <Box component="main">
@@ -253,12 +276,6 @@ export default async function HomePage() {
                   >
                     {description}
                   </Typography>
-                  <Chip
-                    label="준비 중"
-                    size="small"
-                    variant="outlined"
-                    sx={{ mt: 2.5 }}
-                  />
                 </Paper>
               ))}
             </Box>
