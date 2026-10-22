@@ -18,14 +18,14 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
+import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
+import { useUpdateProfile } from "@/src/features/profile/hooks";
+import { ApiError } from "@/src/lib/api/error";
 import {
   avatarFileSchema,
   profileSchema,
 } from "@/src/lib/schemas/profileSchemas";
 import { createClient } from "@/src/lib/supabase/client";
-import { MessageDialog } from "@/src/app/components/MessageDialog";
-import { ApiError } from "@/src/lib/api/error";
-import { useUpdateProfile } from "@/src/features/profile/hooks";
 
 type ProfileCompletionFormProps = {
   userId: string;
@@ -372,7 +372,9 @@ export function ProfileCompletionForm({
           value={name}
           disabled={isLoading}
           error={Boolean(fieldErrors.displayName)}
-          helperText={fieldErrors.displayName || "회원에게 보여지는 이름입니다."}
+          helperText={
+            fieldErrors.displayName || "회원에게 보여지는 이름입니다."
+          }
           slotProps={{ htmlInput: { maxLength: 50 } }}
           onChange={(event) => {
             setName(event.target.value);
@@ -527,8 +529,10 @@ export function ProfileCompletionForm({
         >
           {isLoading ? (
             <CircularProgress size={22} color="inherit" />
+          ) : isComplete ? (
+            "변경사항 저장"
           ) : (
-            isComplete ? "변경사항 저장" : "프로필 완성하기"
+            "프로필 완성하기"
           )}
         </Button>
       </Stack>

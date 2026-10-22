@@ -1,7 +1,9 @@
 "use client";
 
-import { Button, Stack, useTheme } from "@mui/material";
+import { Button, Stack } from "@mui/material";
 import { usePathname } from "next/navigation";
+
+import { linkTextColor, styles as s } from "./header.styles";
 
 export default function HeaderNavigation({
   dashboardHref,
@@ -9,7 +11,6 @@ export default function HeaderNavigation({
   dashboardHref: string;
 }) {
   const pathname = usePathname();
-  const theme = useTheme();
   const navigationItems = [
     { href: dashboardHref, label: "레슨 대시보드" },
     { href: "/members", label: "회원관리" },
@@ -17,12 +18,7 @@ export default function HeaderNavigation({
   ];
 
   return (
-    <Stack
-      component="nav"
-      aria-label="주요 메뉴"
-      direction="row"
-      sx={{ pb: 1.5, gap: 1, flexWrap: "wrap" }}
-    >
+    <Stack component="nav" aria-label="주요 메뉴" direction="row" sx={s.nav}>
       {navigationItems.map(({ href, label }) => {
         const isActive = pathname === href || pathname?.startsWith(`${href}/`);
 
@@ -31,34 +27,9 @@ export default function HeaderNavigation({
             key={href}
             href={href}
             aria-current={isActive ? "page" : undefined}
-            style={{
-              color: isActive
-                ? theme.palette.primary.main
-                : theme.palette.text.secondary,
-            }}
-            sx={{
-              borderRadius: "10px",
-              px: { xs: 1.5, sm: 2 },
-              position: "relative",
-              bgcolor: "transparent",
-              fontWeight: 600,
-              "&:hover": {
-                bgcolor: "action.hover",
-              },
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                bottom: 4,
-                left: "50%",
-                transform: "translateX(-50%)",
-                width: 5,
-                height: 5,
-                borderRadius: "50%",
-                bgcolor: "primary.main",
-                opacity: isActive ? 1 : 0,
-                pointerEvents: "none",
-              },
-            }}
+            disableRipple
+            style={isActive ? linkTextColor.navActive : linkTextColor.nav}
+            sx={[s.navItem, isActive && s.navItemActive]}
           >
             {label}
           </Button>

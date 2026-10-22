@@ -15,12 +15,12 @@ import {
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
+import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
 import {
   authFormMessages,
   getAuthSubmitErrorMessage,
 } from "@/src/features/auth/errors";
 import { useLogin, useSignup } from "@/src/features/auth/hooks";
-import { MessageDialog } from "@/src/app/components/MessageDialog";
 
 import {
   validateAuthForm,

@@ -1,3 +1,5 @@
+# AGENTS.md
+
 ## Language
 
 - Always answer in Korean.
@@ -31,29 +33,33 @@
 - Prefer existing design-system components over custom one-off UI.
 - Keep UI changes scoped to the requested screen or component.
 - Verify text wrapping and layout on relevant viewport sizes when UI changes are visible.
+- Keep component styles out of JSX: put `sx` objects in a sibling `*.styles.ts` file (e.g. `home/home.styles.ts`, `Header/header.styles.ts`) exporting `styles` (imported as `s`), and reference them as `sx={s.xxx}`. Use `sx={[s.base, cond && s.variant]}` for conditional styles.
+- Link button text colors go in the same styles file as plain objects passed via `style` (because `globals.css` `a { color: inherit }` overrides MUI `sx`).
 
 ---
 
 ## Graphify
 
-Graphify is installed in `.venv`, and the current `graphify-out/graph.json` is accepted as the source-code map for the current project root.
+Graphify is installed globally (`~/.local/bin/graphify`), and the current `graphify-out/graph.json` is accepted as the source-code map for this monorepo.
 
 Current status:
 
 - `graphify-out/graph.json` exists.
 - `graphify-out/GRAPH_REPORT.md` exists.
 - `graphify-out/graph.html` exists.
-- The graph scan root is the current project root (`.`), so `source_file` values are relative to the project root.
-- Treat all supported files under the current project root as within the Graphify scope, except files skipped by Graphify or excluded by ignore rules.
+- The graph was generated from the **project root**, so `source_file` values are relative to the project root (e.g. `apps/client/...`, `apps/admin/...`). It is NOT scoped to a single `src` folder.
+- Generated artifacts and vendored areas (`node_modules`, build output, `public`, Storybook static output) are outside this trusted graph scope.
 
 Rules:
 
 - Use Graphify selectively to reduce exploration cost, not as a mandatory first step for every task.
 - For narrow tasks where the relevant file is already known, read the file directly first.
-- For broad project questions involving feature flow, module relationships, ownership, or "where/how is this used", read `graphify-out/GRAPH_REPORT.md` before broad source searches.
+- For broad questions involving feature flow, module relationships, ownership, or "where/how is this used", read `graphify-out/GRAPH_REPORT.md` before broad source searches.
 - If Graphify cannot find a relevant node, fall back to reading source files and using `rg`.
-- For cross-module questions anywhere under the project root, prefer graph query/path/explain commands before broad source searches.
-- After modifying supported files under the project root, run `graphify update .` to keep the graph current. If it fails, report the failure instead of relying on stale graph data.
+- For cross-module questions, prefer graph query/path/explain commands before broad source searches.
+- For questions about areas outside the trusted graph scope, use source files and `rg` directly.
+- After modifying code, run `graphify update .` from the project root to keep the graph current. If it fails, report the failure instead of relying on stale graph data.
+- If `graphify` is not found (e.g. Cowork runs commands in a separate Linux VM where the Mac's `~/.local/bin/graphify` is not available), install it first with `uv tool install graphifyy` (package name has two y's), then run `~/.local/bin/graphify update .` from the project root.
 
 ---
 

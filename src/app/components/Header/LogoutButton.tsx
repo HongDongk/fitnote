@@ -8,6 +8,8 @@ import { useRef, useState } from "react";
 import { getLogoutErrorMessage } from "@/src/features/auth/errors";
 import { useLogout } from "@/src/features/auth/hooks";
 
+import { styles as s } from "./header.styles";
+
 export function LogoutButton({ redirectTo = "/" }: { redirectTo?: string }) {
   const router = useRouter();
   const logout = useLogout();
@@ -34,7 +36,7 @@ export function LogoutButton({ redirectTo = "/" }: { redirectTo?: string }) {
   }
 
   return (
-    <Stack spacing={1} sx={{ alignItems: "flex-end" }}>
+    <Stack spacing={1} sx={s.logoutWrapper}>
       <Button
         type="button"
         variant="text"
@@ -48,19 +50,7 @@ export function LogoutButton({ redirectTo = "/" }: { redirectTo?: string }) {
             <LogoutRoundedIcon />
           )
         }
-        sx={{
-          color: "primary.dark",
-          px: 2.5,
-          minHeight: 40,
-          borderRadius: "10px",
-          bgcolor: "#e7f3ec",
-          fontWeight: 700,
-          transition: "background-color 160ms ease",
-          "&.Mui-focusVisible": {
-            outline: "2px solid #276749",
-            outlineOffset: 3,
-          },
-        }}
+        sx={s.logoutButton}
       >
         {isLoading ? "로그아웃 중" : "로그아웃"}
       </Button>

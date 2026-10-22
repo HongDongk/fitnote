@@ -18,7 +18,7 @@ import {
 } from "@mui/material";
 import { useRef, useState, type SubmitEvent } from "react";
 
-import { MessageDialog } from "@/src/app/components/MessageDialog";
+import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
 import type { MemberSummary } from "@/src/features/members/api";
 import { ApiError } from "@/src/lib/api/error";
 import { memberCreateSchema } from "@/src/lib/schemas/memberSchemas";

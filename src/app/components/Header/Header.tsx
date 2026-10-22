@@ -5,6 +5,8 @@ import HeaderNavigation from "@/src/app/components/Header/HeaderNavigation";
 import { LogoutButton } from "@/src/app/components/Header/LogoutButton";
 import { createClient } from "@/src/lib/supabase/server";
 
+import { linkTextColor, styles as s } from "./header.styles";
+
 export default async function Header({
   showNavigation = false,
   showLogin = true,
@@ -48,103 +50,45 @@ export default async function Header({
   }
 
   return (
-    <Box
-      component="header"
-      sx={{
-        borderBottom: "1px solid",
-        borderColor: "divider",
-        bgcolor: "background.paper",
-      }}
-    >
+    <Box component="header" sx={s.header}>
       <Container maxWidth="lg">
-        <Stack
-          direction="row"
-          sx={{
-            py: 2,
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: { xs: 1, sm: 2 },
-            flexWrap: "wrap",
-          }}
-        >
+        <Stack direction="row" sx={s.bar}>
           <Stack
             component="a"
             href="/"
             direction="row"
-            spacing={1}
-            sx={{ alignItems: "center", flexShrink: 0 }}
+            spacing={0.75}
+            sx={s.logo}
           >
             <Image
               src="/images/logo.png"
               alt=""
-              width={36}
-              height={36}
+              width={28}
+              height={28}
               priority
             />
-            <Typography sx={{ fontWeight: 800, fontSize: 21 }}>
-              FitNote
-            </Typography>
+            <Typography sx={s.logoText}>FitNote</Typography>
           </Stack>
           {user ? (
-            <Stack
-              direction="row"
-              spacing={{ xs: 1, sm: 1.5 }}
-              sx={{
-                alignItems: "center",
-                justifyContent: "flex-end",
-                minWidth: 0,
-              }}
-            >
-              <Stack
-                direction="row"
-                spacing={1}
+            <Stack direction="row" spacing={{ xs: 0.5, sm: 1 }} sx={s.userArea}>
+              <Typography
+                noWrap
                 title={`${displayName || "회원"}님`}
-                sx={{
-                  alignItems: "center",
-                  height: 40,
-                  px: 1,
-                  bgcolor: "#f3f7f4",
-                  border: "1px solid #e2ebe5",
-                  borderRadius: "999px",
-                  minWidth: 0,
-                }}
+                sx={s.userName}
               >
-                <Typography
-                  variant="body2"
-                  noWrap
-                  sx={{
-                    color: "primary.dark",
-                    fontWeight: 700,
-                    fontSize: 13,
-                    maxWidth: { xs: 64, sm: 160 },
-                    minWidth: 0,
-                  }}
-                >
-                  {displayName || "회원"} 님
-                </Typography>
-              </Stack>
-              <Box sx={{ flexShrink: 0 }}>
+                {displayName || "회원"} 님
+              </Typography>
+              <Box sx={s.logoutSlot}>
                 <LogoutButton redirectTo={logoutRedirectTo} />
               </Box>
             </Stack>
           ) : showLogin ? (
             <Button
               href="/login"
-              variant="text"
+              variant="contained"
               size="small"
-              style={{ color: "#1d4d38" }}
-              sx={{
-                px: 2.5,
-                minHeight: 40,
-                borderRadius: "10px",
-                bgcolor: "#e7f3ec",
-                fontWeight: 700,
-                transition: "background-color 160ms ease",
-                "&.Mui-focusVisible": {
-                  outline: "2px solid #276749",
-                  outlineOffset: 3,
-                },
-              }}
+              style={linkTextColor.login}
+              sx={s.loginButton}
             >
               로그인
             </Button>

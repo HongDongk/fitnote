@@ -10,6 +10,8 @@ import {
 } from "@mui/material";
 import { useId } from "react";
 
+import { styles as s } from "./messageDialog.styles";
+
 type MessageDialogProps = {
   open: boolean;
   title: string;
@@ -44,62 +46,26 @@ export function MessageDialog({
       fullWidth
       maxWidth="xs"
       slotProps={{
-        backdrop: {
-          sx: {
-            bgcolor: "rgba(23, 35, 28, 0.35)",
-            backdropFilter: "blur(4px)",
-          },
-        },
-        paper: {
-          sx: {
-            m: "20px",
-            width: "calc(100% - 40px)",
-            maxHeight: "calc(100dvh - 40px)",
-            borderRadius: "24px",
-            border: "1px solid rgba(255, 255, 255, 0.8)",
-            boxShadow: "0 24px 80px rgba(23, 35, 28, 0.16)",
-          },
-        },
+        backdrop: { sx: s.backdrop },
+        paper: { sx: s.paper },
       }}
     >
-      <DialogTitle
-        id={titleId}
-        sx={{
-          p: "28px 24px 12px",
-          fontSize: 20,
-          fontWeight: 750,
-          lineHeight: 1.5,
-          letterSpacing: "-0.03em",
-          textAlign: "center",
-          wordBreak: "keep-all",
-        }}
-      >
+      <DialogTitle id={titleId} sx={s.title}>
         {title}
       </DialogTitle>
-      <DialogContent sx={{ p: "0 24px" }}>
-        <DialogContentText
-          id={descriptionId}
-          sx={{
-            m: 0,
-            fontSize: 15,
-            lineHeight: 1.8,
-            textAlign: "center",
-            wordBreak: "keep-all",
-            overflowWrap: "anywhere",
-          }}
-        >
+      <DialogContent sx={s.content}>
+        <DialogContentText id={descriptionId} sx={s.message}>
           {message}
         </DialogContentText>
       </DialogContent>
-      <DialogActions sx={{ p: 3 }}>
+      <DialogActions disableSpacing sx={s.actions}>
         {onConfirm && (
           <Button
-            variant="outlined"
             onClick={onClose}
             disabled={isPending}
             autoFocus
             fullWidth
-            sx={{ minHeight: 50, borderRadius: "14px" }}
+            sx={s.cancelButton}
           >
             취소
           </Button>
@@ -111,7 +77,7 @@ export function MessageDialog({
           disabled={isPending}
           autoFocus={!onConfirm}
           fullWidth
-          sx={{ minHeight: 50, borderRadius: "14px" }}
+          sx={s.confirmButton}
         >
           {confirmText}
         </Button>

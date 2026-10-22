@@ -14,7 +14,7 @@ import {
 } from "@mui/material";
 import { useEffect, useRef, useState } from "react";
 
-import { MessageDialog } from "@/src/app/components/MessageDialog";
+import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
 import { getBookingErrorMessage } from "@/src/features/bookings/errors";
 import {
   useBookingRealtime,
