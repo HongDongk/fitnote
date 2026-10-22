@@ -13,6 +13,8 @@ import {
 import { useRequestMemberLogin } from "@/src/features/members/hooks";
 import { memberLoginSchema } from "@/src/lib/schemas/memberSchemas";
 
+import { styles as s } from "./slug.styles";
+
 type MemberAccessProps = {
   instructorSlug: string;
   initialError?: string;
@@ -70,19 +72,15 @@ export function MemberAccess({
   return (
     <>
       {sentEmail ? (
-        <Stack spacing={2} sx={{ textAlign: "center", alignItems: "center" }}>
-          <MailOutlineRoundedIcon
-            sx={{ fontSize: 40, color: "primary.main" }}
-          />
-          <Typography component="h2" sx={{ fontSize: 22, fontWeight: 800 }}>
+        <Stack spacing={2} sx={s.sent}>
+          <Box sx={s.sentIconBox}>
+            <MailOutlineRoundedIcon sx={s.sentIcon} />
+          </Box>
+          <Typography component="h2" sx={s.sectionTitle}>
             이메일 인증을 완료해주세요
           </Typography>
-          <Typography
-            sx={{ fontWeight: 700, overflowWrap: "anywhere", maxWidth: "100%" }}
-          >
-            {sentEmail}
-          </Typography>
-          <Typography variant="body2" color="text.secondary">
+          <Typography sx={s.sentEmail}>{sentEmail}</Typography>
+          <Typography sx={s.sectionDescription}>
             메일의 로그인 링크를 눌러주세요. 메일이 보이지 않으면 스팸함도
             확인해주세요.
           </Typography>
@@ -90,16 +88,16 @@ export function MemberAccess({
             fullWidth
             variant="contained"
             onClick={() => router.refresh()}
-            sx={{ minHeight: 52, borderRadius: "14px" }}
+            sx={s.sentConfirm}
           >
             인증 완료했어요
           </Button>
-          <Stack
-            direction="row"
-            spacing={1}
-            sx={{ flexWrap: "wrap", justifyContent: "center" }}
-          >
-            <Button onClick={sendEmail} disabled={requestLogin.isPending}>
+          <Stack direction="row" spacing={1} sx={s.sentActions}>
+            <Button
+              onClick={sendEmail}
+              disabled={requestLogin.isPending}
+              sx={s.textButton}
+            >
               {requestLogin.isPending ? "발송 중…" : "메일 다시 보내기"}
             </Button>
             <Button
@@ -108,6 +106,7 @@ export function MemberAccess({
                 setEmailError("");
               }}
               disabled={requestLogin.isPending}
+              sx={s.textButton}
             >
               다른 이메일 사용
             </Button>
@@ -122,14 +121,16 @@ export function MemberAccess({
             void sendEmail();
           }}
         >
-          <Stack spacing={2}>
-            <Typography component="h2" sx={{ fontSize: 22, fontWeight: 800 }}>
-              회원 로그인
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              강사님께 등록한 이메일을 입력해주세요. 비밀번호 없이 메일 링크로
-              로그인할 수 있어요.
-            </Typography>
+          <Stack spacing={2} sx={s.accessForm}>
+            <Box>
+              <Typography component="h2" sx={s.sectionTitle}>
+                회원 로그인
+              </Typography>
+              <Typography sx={s.sectionDescription}>
+                강사님께 등록한 이메일을 입력해주세요. 비밀번호 없이 메일 링크로
+                로그인할 수 있어요.
+              </Typography>
+            </Box>
             <TextField
               name="email"
               label="이메일"
@@ -145,19 +146,12 @@ export function MemberAccess({
                 setEmail(event.target.value);
                 setEmailError("");
               }}
-              sx={{
-                "& .MuiOutlinedInput-root": {
-                  minHeight: 56,
-                  borderRadius: "14px",
-                },
-                "& .MuiFormHelperText-root": { minHeight: 20 },
-              }}
             />
             <Button
               type="submit"
               variant="contained"
               disabled={requestLogin.isPending}
-              sx={{ minHeight: 52, borderRadius: "14px" }}
+              sx={s.accessSubmit}
             >
               {requestLogin.isPending ? "메일 발송 중…" : "이메일 인증하기"}
             </Button>

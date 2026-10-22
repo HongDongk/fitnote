@@ -22,6 +22,8 @@ import {
   useChangeBookingRequest,
 } from "@/src/features/bookings/hooks";
 
+import { styles as s } from "./slug.styles";
+
 type BookingRequestsProps = {
   instructorId: string;
   accountId: string | null;
@@ -129,53 +131,32 @@ function BookingRequestList({
   }
 
   return (
-    <Paper
-      elevation={0}
-      sx={{
-        p: { xs: 2.5, sm: 3 },
-        border: "1px solid #e2ebe5",
-        borderRadius: "24px",
-      }}
-    >
-      <Stack spacing={2.5}>
-        <Stack
-          direction={{ xs: "column", sm: "row" }}
-          spacing={2}
-          sx={{ justifyContent: "space-between", alignItems: { sm: "center" } }}
-        >
-          <Box>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <Typography component="h2" variant="h6" sx={{ fontWeight: 800 }}>
-                {isInstructor ? "수업 신청" : "내 신청 내역"}
-              </Typography>
-              {!requests.isPending && !requests.isError && (
-                <Chip
-                  label={`대기 ${pendingCount}`}
-                  color="primary"
-                  size="small"
-                />
-              )}
-            </Stack>
-            <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-              {isInstructor
-                ? "회원이 원하는 시간을 확인하고 수업을 확정해주세요."
-                : "강사님이 승인하면 달력에 수업이 표시됩니다."}
+    <Paper elevation={0} sx={s.requests}>
+      <Stack spacing={2}>
+        <Box>
+          <Stack direction="row" spacing={1} sx={s.requestsHeader}>
+            <Typography component="h2" sx={s.requestsTitle}>
+              {isInstructor ? "수업 신청" : "내 신청 내역"}
             </Typography>
-          </Box>
-        </Stack>
+            {!requests.isPending && !requests.isError && (
+              <Chip
+                label={`대기 ${pendingCount}`}
+                size="small"
+                sx={s.countBadge}
+              />
+            )}
+          </Stack>
+          <Typography sx={s.sectionDescription}>
+            {isInstructor
+              ? "회원이 원하는 시간을 확인하고 수업을 확정해주세요."
+              : "강사님이 승인하면 달력에 수업이 표시됩니다."}
+          </Typography>
+        </Box>
 
         {requests.isPending ? (
           <Stack spacing={1.5} aria-label="수업 신청 불러오는 중">
-            <Skeleton
-              variant="rounded"
-              height={96}
-              sx={{ borderRadius: "16px" }}
-            />
-            <Skeleton
-              variant="rounded"
-              height={96}
-              sx={{ borderRadius: "16px" }}
-            />
+            <Skeleton variant="rounded" height={96} sx={s.skeleton} />
+            <Skeleton variant="rounded" height={96} sx={s.skeleton} />
           </Stack>
         ) : requests.isError ? (
           <Alert
@@ -193,14 +174,9 @@ function BookingRequestList({
             {getBookingErrorMessage(requests.error)}
           </Alert>
         ) : visibleRequests.length === 0 ? (
-          <Stack
-            spacing={1}
-            sx={{ py: 4, alignItems: "center", textAlign: "center" }}
-          >
-            <EventNoteRoundedIcon
-              sx={{ fontSize: 32, color: "primary.main", opacity: 0.65 }}
-            />
-            <Typography color="text.secondary" variant="body2">
+          <Stack spacing={1} sx={s.empty}>
+            <EventNoteRoundedIcon sx={s.emptyIcon} />
+            <Typography sx={s.emptyText}>
               대기 중인 수업 신청이 없어요.
             </Typography>
           </Stack>
@@ -213,32 +189,15 @@ function BookingRequestList({
               const isPending = request.status === "pending";
 
               return (
-                <Box
-                  key={request.id}
-                  sx={{
-                    p: 2,
-                    borderRadius: "18px",
-                    bgcolor: "#f7faf8",
-                    border: "1px solid #e9efeb",
-                  }}
-                >
+                <Box key={request.id} sx={s.requestItem}>
                   <Stack
                     direction={{ xs: "column", sm: "row" }}
                     spacing={2}
-                    sx={{
-                      justifyContent: "space-between",
-                      alignItems: { sm: "center" },
-                    }}
+                    sx={s.requestRow}
                   >
-                    <Box sx={{ minWidth: 0 }}>
-                      <Stack
-                        direction="row"
-                        spacing={1}
-                        sx={{ alignItems: "center", mb: 0.75 }}
-                      >
-                        <Typography
-                          sx={{ fontWeight: 750, overflowWrap: "anywhere" }}
-                        >
+                    <Box sx={s.requestInfo}>
+                      <Stack direction="row" spacing={1} sx={s.requestTitleRow}>
+                        <Typography sx={s.requestTitle}>
                           {isInstructor
                             ? `${request.member?.name ?? "회원"}님`
                             : dateFormatter.format(startsAt)}
@@ -246,16 +205,15 @@ function BookingRequestList({
                         <Chip
                           label={statusLabels[request.status] ?? request.status}
                           size="small"
-                          color={
+                          sx={[
+                            s.statusBadge,
                             request.status === "approved"
-                              ? "primary"
-                              : "default"
-                          }
-                          variant="outlined"
-                          sx={{ flexShrink: 0 }}
+                              ? s.statusApproved
+                              : s.statusDefault,
+                          ]}
                         />
                       </Stack>
-                      <Typography variant="body2" color="text.secondary">
+                      <Typography sx={s.requestTime}>
                         {isInstructor && `${dateFormatter.format(startsAt)} · `}
                         {timeFormatter.format(startsAt)} —{" "}
                         {dateFormatter.format(startsAt) !==
@@ -264,11 +222,7 @@ function BookingRequestList({
                         {timeFormatter.format(endsAt)}
                       </Typography>
                       {isPast && isPending && (
-                        <Typography
-                          variant="caption"
-                          color="text.secondary"
-                          sx={{ display: "block", mt: 0.75 }}
-                        >
+                        <Typography variant="caption" sx={s.requestPastNote}>
                           지난 시간은 승인할 수 없어요.{" "}
                           {isInstructor
                             ? "신청을 거절해주세요."
@@ -277,11 +231,10 @@ function BookingRequestList({
                       )}
                     </Box>
                     {isPending && (
-                      <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
+                      <Stack direction="row" spacing={1} sx={s.requestActions}>
                         {isInstructor ? (
                           <>
                             <Button
-                              variant="outlined"
                               disabled={changeRequest.isPending}
                               onClick={() =>
                                 setConfirmation({
@@ -289,7 +242,7 @@ function BookingRequestList({
                                   action: "reject",
                                 })
                               }
-                              sx={{ minHeight: 40, borderRadius: "12px" }}
+                              sx={s.requestGreyButton}
                             >
                               거절
                             </Button>
@@ -303,14 +256,13 @@ function BookingRequestList({
                               onClick={() =>
                                 handleChange(request.id, "approve")
                               }
-                              sx={{ minHeight: 40, borderRadius: "12px" }}
+                              sx={s.requestButton}
                             >
                               승인
                             </Button>
                           </>
                         ) : (
                           <Button
-                            variant="outlined"
                             disabled={changeRequest.isPending}
                             onClick={() =>
                               setConfirmation({
@@ -318,7 +270,7 @@ function BookingRequestList({
                                 action: "cancel",
                               })
                             }
-                            sx={{ minHeight: 40, borderRadius: "12px" }}
+                            sx={s.requestGreyButton}
                           >
                             신청 취소
                           </Button>
@@ -366,7 +318,7 @@ function BookingRequestList({
           severity={notification?.severity ?? "success"}
           variant="filled"
           onClose={() => setNotification(null)}
-          sx={{ width: "100%", borderRadius: "14px" }}
+          sx={[s.toast, notification?.severity === "error" && s.toastError]}
         >
           {notification?.message}
         </Alert>

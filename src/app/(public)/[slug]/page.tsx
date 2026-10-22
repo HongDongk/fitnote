@@ -18,6 +18,7 @@ import { createClient } from "@/src/lib/supabase/server";
 import { BookingRequests } from "./components/BookingRequests";
 import { MemberAccess } from "./components/MemberAccess";
 import { ScheduleCalendar } from "./components/ScheduleCalendar";
+import { styles as s } from "./components/slug.styles";
 
 export async function generateMetadata({
   params,
@@ -84,7 +85,7 @@ export default async function InstructorDashboardPage({
 
   if (profileError) {
     return (
-      <Container component="main" maxWidth="sm" sx={{ py: 6 }}>
+      <Container component="main" maxWidth="sm" sx={s.errorPage}>
         <Alert
           severity="error"
           action={
@@ -128,24 +129,17 @@ export default async function InstructorDashboardPage({
   const accountId = isLoggedIn && user ? user.id : null;
 
   return (
-    <Box sx={{ minHeight: "100dvh", bgcolor: "background.default" }}>
+    <Box sx={s.page}>
       <Header
         showNavigation={isInstructor}
         showLogin={false}
         logoutRedirectTo={`/${slug}`}
         instructorId={profile.id}
       />
-      <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Container component="main" maxWidth="lg" sx={s.main}>
         <Stack spacing={3}>
           {!isLoggedIn && (
-            <Paper
-              elevation={0}
-              sx={{
-                p: { xs: 3, sm: 4 },
-                borderRadius: "24px",
-                border: "1px solid #e2ebe5",
-              }}
-            >
+            <Paper elevation={0} sx={s.card}>
               {authUnavailable ? (
                 <Alert
                   severity="error"
@@ -167,61 +161,22 @@ export default async function InstructorDashboardPage({
               )}
             </Paper>
           )}
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 2, sm: 3 },
-              borderRadius: "24px",
-              border: "1px solid #e2ebe5",
-            }}
-          >
+          <Paper elevation={0} sx={s.card}>
             <Stack spacing={3}>
               {!isInstructor && (
-                <Stack
-                  direction="row"
-                  spacing={2}
-                  sx={{
-                    alignItems: "center",
-                    p: { xs: 2, sm: 2.5 },
-                    borderRadius: "18px",
-                    background: "#f0f7f2",
-                  }}
-                >
+                <Stack direction="row" spacing={2} sx={s.profile}>
                   <Avatar
                     src={profile.avatar_url || undefined}
                     alt={`${profile.display_name} 프로필`}
-                    sx={{
-                      width: { xs: 56, sm: 64 },
-                      height: { xs: 56, sm: 64 },
-                      flexShrink: 0,
-                      bgcolor: "primary.light",
-                      color: "primary.main",
-                      border: "3px solid white",
-                    }}
+                    sx={s.profileAvatar}
                   >
                     {profile.display_name.slice(0, 1)}
                   </Avatar>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      component="h1"
-                      sx={{
-                        fontSize: { xs: 20, sm: 22 },
-                        fontWeight: 800,
-                        overflowWrap: "anywhere",
-                      }}
-                    >
+                  <Box sx={s.profileText}>
+                    <Typography component="h1" sx={s.profileName}>
                       {profile.display_name} 강사님
                     </Typography>
-                    <Typography
-                      variant="body2"
-                      color="text.secondary"
-                      sx={{
-                        mt: 0.5,
-                        whiteSpace: "pre-wrap",
-                        overflowWrap: "anywhere",
-                        lineHeight: 1.7,
-                      }}
-                    >
+                    <Typography sx={s.profileBio}>
                       {profile.bio || "수업 소개를 준비하고 있습니다."}
                     </Typography>
                   </Box>
@@ -229,17 +184,10 @@ export default async function InstructorDashboardPage({
               )}
               {(isInstructor || isLoggedIn) && (
                 <Box>
-                  <Typography
-                    component="h2"
-                    sx={{ fontSize: { xs: 20, sm: 22 }, fontWeight: 800 }}
-                  >
+                  <Typography component="h2" sx={s.sectionTitle}>
                     {isInstructor ? "나의 스케줄" : "수업 일정 신청"}
                   </Typography>
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    sx={{ mt: 0.5, wordBreak: "keep-all" }}
-                  >
+                  <Typography sx={s.sectionDescription}>
                     {isInstructor
                       ? "등록된 수업 일정을 확인하고 관리하세요."
                       : "원하는 시간대를 선택해 수업을 신청해보세요."}

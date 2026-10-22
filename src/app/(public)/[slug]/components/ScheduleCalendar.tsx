@@ -13,8 +13,6 @@ import {
   Snackbar,
   Stack,
   TextField,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
 import { EventCalendar } from "@mui/x-scheduler/event-calendar";
 import type { SchedulerEvent } from "@mui/x-scheduler/models";
@@ -32,6 +30,8 @@ import {
   useScheduleRealtime,
 } from "@/src/features/schedules/hooks";
 
+import { styles as s } from "./slug.styles";
+
 const timezone = "Asia/Seoul";
 const timeOptions = Array.from({ length: 49 }, (_, index) => index * 30);
 const subscribe = () => () => {};
@@ -46,6 +46,9 @@ const eventColors: SaveScheduleInput["color"][] = [
   "amber",
 ];
 const timeGridColumnClass = "MuiEventCalendar-dayTimeGridColumn";
+// 터치에서는 스크롤과 구분하기 위해 길게 눌러야 시간 선택이 시작된다.
+const longPressDelay = 400;
+const touchMoveTolerance = 10;
 
 function getDateParts(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -112,8 +115,6 @@ export function ScheduleCalendar({
   canRequest?: boolean;
   accountId?: string | null;
 }) {
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const isClient = useSyncExternalStore(
     subscribe,
     () => true,
@@ -148,8 +149,9 @@ export function ScheduleCalendar({
   const [dragRange, setDragRange] = useState<DragRange | null>(null);
   const dialogTrigger = useRef<HTMLElement | null>(null);
   const suppressClick = useRef(false);
+  const touchSelecting = useRef(false);
   const submitting = useRef(false);
-  const currentView = isMobile ? "day" : view;
+  const currentView = view;
   const canSelect = (canEdit || canRequest) && schedulesQuery.isSuccess;
   const isSaving =
     saveSchedule.isPending ||
@@ -166,7 +168,7 @@ export function ScheduleCalendar({
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     suppressClick.current = false;
     if (!canSelect || isSaving) return;
-    if (event.button !== 0 || event.pointerType === "touch") return;
+    if (event.button !== 0) return;
     if (currentView !== "day" && currentView !== "week") return;
     const target = event.target as HTMLElement;
     if (target.closest('button, [role="button"]')) return;
@@ -188,13 +190,13 @@ export function ScheduleCalendar({
         1440,
       );
     };
+    const startX = event.clientX;
     const startY = event.clientY;
     const anchor = getMinutes(startY);
     let range: DragRange | null = null;
 
-    function handleMove(moveEvent: PointerEvent) {
-      if (!range && Math.abs(moveEvent.clientY - startY) < 5) return;
-      const current = getMinutes(moveEvent.clientY);
+    function updateRange(clientY: number) {
+      const current = getMinutes(clientY);
       const start = Math.min(
         Math.floor(Math.min(anchor, current) / 30) * 30,
         1410,
@@ -208,9 +210,7 @@ export function ScheduleCalendar({
       setDragRange(range);
     }
 
-    function handleUp() {
-      window.removeEventListener("pointermove", handleMove);
-      window.removeEventListener("pointerup", handleUp);
+    function openSelection() {
       if (!range) return;
       suppressClick.current = true;
       dialogTrigger.current = column;
@@ -219,6 +219,67 @@ export function ScheduleCalendar({
       }
       setSelection({ id: null, ...range, title: "" });
       setError("");
+    }
+
+    if (event.pointerType === "touch") {
+      let isSelecting = false;
+      const timer = window.setTimeout(() => {
+        isSelecting = true;
+        touchSelecting.current = true;
+        navigator.vibrate?.(10);
+        updateRange(startY);
+      }, longPressDelay);
+
+      const cleanUp = () => {
+        window.clearTimeout(timer);
+        touchSelecting.current = false;
+        window.removeEventListener("touchmove", handleTouchMove);
+        window.removeEventListener("touchend", handleTouchEnd);
+        window.removeEventListener("touchcancel", handleTouchCancel);
+      };
+      function handleTouchMove(moveEvent: TouchEvent) {
+        const touch = moveEvent.touches[0];
+        if (!touch) return;
+        if (!isSelecting) {
+          // 길게 누르기 전에 움직이면 스크롤로 보고 선택을 취소한다.
+          if (
+            Math.hypot(touch.clientX - startX, touch.clientY - startY) >
+            touchMoveTolerance
+          ) {
+            cleanUp();
+          }
+          return;
+        }
+        moveEvent.preventDefault();
+        updateRange(touch.clientY);
+      }
+      function handleTouchEnd(endEvent: TouchEvent) {
+        cleanUp();
+        if (!isSelecting) return;
+        // 손을 뗄 때 생기는 click이 방금 열린 다이얼로그 버튼을 누르지 않게 막는다.
+        endEvent.preventDefault();
+        openSelection();
+      }
+      function handleTouchCancel() {
+        cleanUp();
+        setDragRange(null);
+      }
+
+      window.addEventListener("touchmove", handleTouchMove, { passive: false });
+      window.addEventListener("touchend", handleTouchEnd, { passive: false });
+      window.addEventListener("touchcancel", handleTouchCancel);
+      return;
+    }
+
+    function handleMove(moveEvent: PointerEvent) {
+      if (!range && Math.abs(moveEvent.clientY - startY) < 5) return;
+      updateRange(moveEvent.clientY);
+    }
+
+    function handleUp() {
+      window.removeEventListener("pointermove", handleMove);
+      window.removeEventListener("pointerup", handleUp);
+      openSelection();
     }
 
     window.addEventListener("pointermove", handleMove);
@@ -342,17 +403,17 @@ export function ScheduleCalendar({
       )}
       <Box
         onPointerDown={handlePointerDown}
+        onContextMenu={(event) => {
+          // 길게 눌러 시간을 고르는 동안 모바일 컨텍스트 메뉴가 뜨지 않게 한다.
+          if (touchSelecting.current) event.preventDefault();
+        }}
         onClickCapture={(event) => {
           if (suppressClick.current) {
             suppressClick.current = false;
             event.stopPropagation();
           }
         }}
-        sx={{
-          height: { xs: 640, sm: 720 },
-          minWidth: 0,
-          overflow: "hidden",
-        }}
+        sx={s.calendarBox}
       >
         {isClient && !schedulesQuery.isPending ? (
           <EventCalendar
@@ -393,7 +454,7 @@ export function ScheduleCalendar({
             onVisibleDateChange={setVisibleDate}
             view={currentView}
             onViewChange={setView}
-            views={isMobile ? ["day"] : ["day", "week", "month"]}
+            views={["day", "week", "month"]}
             displayTimezone={timezone}
             dateLocale={ko}
             defaultPreferences={{
@@ -479,63 +540,7 @@ export function ScheduleCalendar({
               });
               setError("");
             }}
-            sx={{
-              height: "100%",
-              "& .MuiEventCalendar-headerToolbar": { flexWrap: "wrap", gap: 1 },
-              "& .MuiEventCalendar-headerToolbarSidePanelToggle, & .MuiEventCalendar-headerToolbarCompactMenuButton, & .MuiEventCalendar-sidePanelCollapse, & .MuiEventCalendar-dayTimeGridAllDayEventsGrid":
-                { display: "none" },
-              "& .MuiEventCalendar-headerToolbarActions": {
-                alignItems: "center",
-                gap: 1,
-              },
-              "& .MuiEventCalendar-headerToolbarDateNavigator": { gap: 1 },
-              "& .MuiEventCalendar-headerToolbarPreviousButton, & .MuiEventCalendar-headerToolbarNextButton":
-                {
-                  width: 40,
-                  height: 40,
-                  border: 1,
-                  borderColor: "divider",
-                  borderRadius: "10px",
-                  color: "text.primary",
-                },
-              "& .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-headerToolbarCompactTodayButton":
-                {
-                  height: 40,
-                  minHeight: 40,
-                  border: 0,
-                  bgcolor: "primary.light",
-                  color: "primary.dark",
-                  boxShadow: "none",
-                  transition: "background-color 160ms ease",
-                  "&:hover": { bgcolor: "#dceadf" },
-                  "&.Mui-focusVisible": {
-                    outline: "2px solid",
-                    outlineColor: "primary.main",
-                    outlineOffset: 3,
-                  },
-                },
-              "& .MuiEventCalendar-headerToolbarTodayButton": {
-                minWidth: 72,
-                px: 2,
-                borderRadius: "999px",
-                fontSize: 13,
-                fontWeight: 700,
-              },
-              "& .MuiEventCalendar-headerToolbarCompactTodayButton": {
-                width: 40,
-                borderRadius: "12px",
-                "& .MuiSvgIcon-root": { fontSize: 20 },
-              },
-              "& .MuiEventCalendar-headerToolbarLeftElement > p": {
-                fontWeight: 800,
-                color: "primary.main",
-              },
-              "& .MuiEventCalendar-timeGridEvent": {
-                borderRadius: "8px",
-                "--time-grid-event-column-gap": "0px",
-              },
-              [`& .${timeGridColumnClass}`]: { userSelect: "none" },
-            }}
+            sx={s.calendar}
           />
         ) : (
           <Skeleton variant="rounded" height="100%" />
@@ -555,13 +560,8 @@ export function ScheduleCalendar({
               }
             },
           },
-          paper: { sx: { m: 2.5, borderRadius: "24px" } },
-          backdrop: {
-            sx: {
-              bgcolor: "rgba(23, 35, 28, 0.35)",
-              backdropFilter: "blur(4px)",
-            },
-          },
+          paper: { sx: s.dialogPaper },
+          backdrop: { sx: s.dialogBackdrop },
         }}
         aria-labelledby="schedule-selection-title"
       >
@@ -573,25 +573,16 @@ export function ScheduleCalendar({
             confirmSelection();
           }}
         >
-          <DialogTitle
-            id="schedule-selection-title"
-            sx={{ fontSize: 22, fontWeight: 800, px: 3, pt: 3 }}
-          >
+          <DialogTitle id="schedule-selection-title" sx={s.dialogTitle}>
             {!canEdit
               ? "수업 신청"
               : selection?.id == null
                 ? "수업 등록"
                 : "수업 수정"}
           </DialogTitle>
-          <DialogContent sx={{ px: 3 }}>
+          <DialogContent sx={s.dialogContent}>
             {selection && (
-              <Stack
-                spacing={2.5}
-                sx={{
-                  pt: 1,
-                  "& .MuiInputBase-root": { minHeight: 56 },
-                }}
-              >
+              <Stack spacing={2.5} sx={s.dialogFields}>
                 {canEdit ? (
                   <TextField
                     label="수업 이름"
@@ -671,23 +662,22 @@ export function ScheduleCalendar({
               </Stack>
             )}
           </DialogContent>
-          <DialogActions sx={{ p: 3 }}>
+          <DialogActions disableSpacing sx={s.dialogActions}>
             {canEdit && selection?.id != null && (
               <Button
-                variant="outlined"
-                color="error"
                 onClick={deleteSelection}
                 disabled={isSaving}
                 fullWidth
+                sx={s.dialogDelete}
               >
                 삭제
               </Button>
             )}
             <Button
-              variant="outlined"
               onClick={closeDialog}
               disabled={isSaving}
               fullWidth
+              sx={s.dialogCancel}
             >
               취소
             </Button>
@@ -696,6 +686,7 @@ export function ScheduleCalendar({
               variant="contained"
               disabled={isSaving}
               fullWidth
+              sx={s.dialogButton}
             >
               {isSaving
                 ? "처리 중…"
@@ -720,7 +711,7 @@ export function ScheduleCalendar({
           severity="success"
           variant="filled"
           onClose={() => setNotice("")}
-          sx={{ width: "100%", borderRadius: "14px" }}
+          sx={s.toast}
         >
           {notice}
         </Alert>
