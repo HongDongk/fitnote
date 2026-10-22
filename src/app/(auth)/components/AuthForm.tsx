@@ -29,6 +29,8 @@ import {
   type FieldName,
 } from "@/src/lib/schemas/authSchemas";
 
+import { styles as s } from "./auth.styles";
+
 export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
   const router = useRouter();
   const [message, setMessage] = useState("");
@@ -136,24 +138,20 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
 
   if (verificationEmail) {
     return (
-      <Stack
-        spacing={2}
-        role="status"
-        sx={{ alignItems: "center", textAlign: "center", py: 2 }}
-      >
-        <EmailOutlinedIcon color="primary" sx={{ fontSize: 48 }} />
-        <Typography component="h2" variant="h6" sx={{ fontWeight: 700 }}>
+      <Stack spacing={2} role="status" sx={s.verification}>
+        <Box sx={s.verificationIcon}>
+          <EmailOutlinedIcon sx={s.verificationIconSvg} />
+        </Box>
+        <Typography component="h2" sx={s.verificationTitle}>
           이메일 인증을 완료해주세요
         </Typography>
-        <Typography sx={{ fontWeight: 600, overflowWrap: "anywhere" }}>
-          {verificationEmail}
-        </Typography>
-        <Typography variant="body2" color="text.secondary">
+        <Typography sx={s.verificationEmail}>{verificationEmail}</Typography>
+        <Typography sx={s.verificationBody}>
           위 주소로 인증 메일을 보냈습니다.
           <br />
           메일의 인증 링크를 눌러 가입을 완료해주세요.
         </Typography>
-        <Typography variant="caption" color="text.secondary">
+        <Typography sx={s.verificationNote}>
           메일이 보이지 않으면 스팸함도 확인해주세요.
           <br />
           가입한 브라우저에서 인증 링크를 열어주세요.
@@ -169,15 +167,7 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
         noValidate
         spacing={1}
         onSubmit={handleSubmit}
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            minHeight: 56,
-          },
-          "& .MuiFormHelperText-root": {
-            minHeight: 23,
-            lineHeight: "20px",
-          },
-        }}
+        sx={s.form}
       >
         {mode === "sign-up" && (
           <TextField
@@ -279,7 +269,7 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
           disabled={isLoading}
           aria-busy={isLoading}
           aria-label={isLoading ? "처리 중" : undefined}
-          sx={{ mt: 1, py: 1.5, borderRadius: 2 }}
+          sx={s.submitButton}
         >
           {isLoading ? (
             <CircularProgress size={22} color="inherit" aria-hidden="true" />

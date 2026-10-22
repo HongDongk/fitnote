@@ -13,6 +13,7 @@ import { redirect } from "next/navigation";
 
 import { createClient } from "@/src/lib/supabase/server";
 
+import { linkTextColor, styles as s } from "../components/auth.styles";
 import { AuthForm } from "../components/AuthForm";
 
 type LoginProps = {
@@ -39,103 +40,63 @@ export default async function LoginPage({ searchParams }: LoginProps) {
   }
 
   return (
-    <Box
-      component="main"
-      sx={{
-        minHeight: "100dvh",
-        display: "grid",
-        placeItems: "center",
-        py: { xs: 3, sm: 6 },
-        bgcolor: "#f4f7f5",
-      }}
-    >
-      <Container maxWidth="sm" sx={{ maxWidth: { sm: 480 } }}>
+    <Box component="main" sx={s.page}>
+      <Container maxWidth="sm" sx={s.container}>
         <Button
           href="/"
           startIcon={<ArrowBackRoundedIcon />}
-          style={{ color: "#627068" }}
-          sx={{ mb: 2, px: 1, minHeight: 40 }}
+          style={linkTextColor.back}
+          sx={s.backButton}
         >
           홈으로
         </Button>
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 3, sm: 5 },
-            border: "1px solid",
-            borderColor: "divider",
-            borderRadius: 4,
-            boxShadow: { sm: "0 16px 48px rgba(24, 72, 48, 0.06)" },
-          }}
-        >
+        <Paper elevation={0} sx={s.card}>
           <Stack spacing={4}>
-            <Stack spacing={1.5} sx={{ alignItems: "flex-start" }}>
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{ alignItems: "center", mb: 1 }}
-              >
+            <Stack spacing={1} sx={s.intro}>
+              <Stack direction="row" spacing={0.75} sx={s.logo}>
                 <Image
                   src="/images/logo.png"
                   alt=""
-                  width={36}
-                  height={36}
+                  width={28}
+                  height={28}
                   priority
                 />
-                <Typography sx={{ fontWeight: 800, fontSize: 21 }}>
-                  FitNote
-                </Typography>
+                <Typography sx={s.logoText}>FitNote</Typography>
               </Stack>
-              <Typography component="h1" variant="h4">
+              <Typography component="h1" sx={s.title}>
                 다시 만나서 반가워요 :)
               </Typography>
-              <Typography color="text.secondary">
+              <Typography sx={s.description}>
                 이메일과 비밀번호로 로그인하세요.
               </Typography>
             </Stack>
 
             <AuthForm mode="sign-in" />
 
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ textAlign: "center" }}
-            >
+            <Typography sx={s.switchText}>
               아직 회원이 아니신가요?{" "}
               <Link
                 href="/signup"
-                style={{ color: "#276749" }}
-                sx={{ ml: 1, fontWeight: 700 }}
+                style={linkTextColor.primary}
+                sx={s.switchLink}
               >
                 회원가입
               </Link>
             </Typography>
 
             {error === "auth" && (
-              <Typography
-                color="error"
-                role="alert"
-                sx={{ textAlign: "center" }}
-              >
+              <Typography color="error" role="alert" sx={s.errorText}>
                 이메일 인증에 실패했습니다.
               </Typography>
             )}
             {error === "profile" && (
-              <Typography
-                color="error"
-                role="alert"
-                sx={{ textAlign: "center" }}
-              >
+              <Typography color="error" role="alert" sx={s.errorText}>
                 프로필 생성에 실패했습니다.
               </Typography>
             )}
           </Stack>
         </Paper>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ mt: 2.5, display: "block", textAlign: "center" }}
-        >
+        <Typography variant="caption" sx={s.footnote}>
           1인 강사와 소규모 스튜디오를 위한 간편한 시작
         </Typography>
       </Container>
