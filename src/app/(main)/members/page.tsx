@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import Header from "@/src/app/components/Header/Header";
 import { createClient } from "@/src/lib/supabase/server";
 import { MemberManagement } from "./components/MemberManagement";
+import { styles as s } from "./components/members.styles";
 
 export default async function MembersPage() {
   const supabase = await createClient();
@@ -26,14 +27,9 @@ export default async function MembersPage() {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100dvh",
-        bgcolor: "background.default",
-      }}
-    >
+    <Box sx={s.page}>
       <Header showNavigation />
-      <Container component="main" maxWidth="lg" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Container component="main" maxWidth="lg" sx={s.main}>
         <MemberManagement instructorId={profile.id} />
       </Container>
     </Box>

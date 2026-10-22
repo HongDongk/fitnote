@@ -33,6 +33,8 @@ import {
   useInstructorMembers,
 } from "@/src/features/members/hooks";
 
+import { styles as s } from "./members.styles";
+
 type MemberManagementProps = {
   instructorId: string;
 };
@@ -106,46 +108,27 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography component="h1" variant="h4" sx={{ fontWeight: 800 }}>
+        <Typography component="h1" sx={s.title}>
           회원 관리
         </Typography>
-        <Typography
-          color="text.secondary"
-          sx={{ mt: 1, wordBreak: "keep-all" }}
-        >
+        <Typography sx={s.description}>
           회원을 등록하고, 내 수업과 연결된 회원을 확인하세요.
         </Typography>
       </Box>
-      <Box
-        sx={{
-          display: "grid",
-          gridTemplateColumns: {
-            xs: "minmax(0, 1fr)",
-            md: "320px minmax(0, 1fr)",
-          },
-          gap: 3,
-          alignItems: "start",
-        }}
-      >
-        <Paper
-          elevation={0}
-          sx={{ p: 3, borderRadius: "24px", border: "1px solid #e2ebe5" }}
-        >
+      <Box sx={s.layout}>
+        <Paper elevation={0} sx={s.card}>
           <Stack
             component="form"
             noValidate
             spacing={2}
             onSubmit={handleSubmit}
+            sx={s.form}
           >
             <Box>
-              <Typography component="h2" variant="h6" sx={{ fontWeight: 750 }}>
+              <Typography component="h2" sx={s.cardTitle}>
                 새 회원 등록
               </Typography>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ mt: 0.5 }}
-              >
+              <Typography sx={s.cardDescription}>
                 회원이 인증할 이메일을 입력해주세요.
               </Typography>
             </Box>
@@ -161,7 +144,6 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 error={Boolean(fieldErrors.name)}
                 helperText={fieldErrors.name || " "}
                 slotProps={{ htmlInput: { maxLength: 50 } }}
-                sx={{ "& .MuiInputBase-root": { minHeight: 56 } }}
                 onChange={(event) => {
                   setName(event.target.value);
                   setFieldErrors((previous) => ({ ...previous, name: "" }));
@@ -179,7 +161,6 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 error={Boolean(fieldErrors.email)}
                 helperText={fieldErrors.email || " "}
                 slotProps={{ htmlInput: { maxLength: 254 } }}
-                sx={{ "& .MuiInputBase-root": { minHeight: 56 } }}
                 onChange={(event) => {
                   setEmail(event.target.value);
                   setFieldErrors((previous) => ({ ...previous, email: "" }));
@@ -190,45 +171,34 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
               type="submit"
               variant="contained"
               disabled={createMember.isPending}
-              sx={{ minHeight: 50, borderRadius: "14px" }}
+              sx={s.submitButton}
             >
               {createMember.isPending ? "등록 중…" : "회원 등록"}
             </Button>
-            <Typography
-              variant="caption"
-              color="text.secondary"
-              sx={{ lineHeight: 1.8, wordBreak: "keep-all" }}
-            >
+            <Typography sx={s.formNote}>
               등록만으로 메일은 발송되지 않습니다. 회원이 등록된 이메일로
               인증하면 계정이 연결됩니다.
             </Typography>
           </Stack>
         </Paper>
-        <Paper
-          elevation={0}
-          sx={{
-            p: { xs: 2.5, sm: 3 },
-            borderRadius: "24px",
-            border: "1px solid #e2ebe5",
-          }}
-        >
-          <Stack spacing={2.5}>
-            <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
-              <Typography component="h2" variant="h6" sx={{ fontWeight: 750 }}>
+        <Paper elevation={0} sx={s.card}>
+          <Stack spacing={2}>
+            <Stack direction="row" spacing={1} sx={s.listHeader}>
+              <Typography component="h2" sx={s.cardTitle}>
                 등록된 회원
               </Typography>
               {members.data && (
-                <Chip label={`${members.data.length}명`} size="small" />
+                <Chip
+                  label={`${members.data.length}명`}
+                  size="small"
+                  sx={s.countBadge}
+                />
               )}
             </Stack>
             {members.isPending ? (
-              <Stack
-                role="status"
-                spacing={1.5}
-                sx={{ alignItems: "center", py: 5 }}
-              >
+              <Stack role="status" spacing={1.5} sx={s.status}>
                 <CircularProgress size={28} />
-                <Typography variant="body2" color="text.secondary">
+                <Typography sx={s.statusText}>
                   회원 정보를 불러오는 중입니다.
                 </Typography>
               </Stack>
@@ -249,55 +219,33 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 {getMemberManagementErrorMessage(members.error)}
               </Alert>
             ) : members.data?.length ? (
-              <Stack
-                component="ul"
-                spacing={1.5}
-                sx={{ m: 0, p: 0, listStyle: "none" }}
-              >
+              <Stack component="ul" sx={s.memberList}>
                 {members.data.map((member) => (
-                  <Box
-                    component="li"
-                    key={member.id}
-                    sx={{
-                      p: 2,
-                      border: "1px solid #e2ebe5",
-                      borderRadius: "16px",
-                    }}
-                  >
-                    <Stack
-                      direction="row"
-                      spacing={1.5}
-                      sx={{ alignItems: "flex-start" }}
-                    >
-                      <Avatar
-                        sx={{ bgcolor: "#eaf3ec", color: "primary.main" }}
-                      >
+                  <Box component="li" key={member.id} sx={s.memberItem}>
+                    <Stack direction="row" spacing={1.5} sx={s.memberRow}>
+                      <Avatar sx={s.memberAvatar}>
                         {member.name.slice(0, 1)}
                       </Avatar>
-                      <Stack spacing={0.75} sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography
-                          sx={{ fontWeight: 700, overflowWrap: "anywhere" }}
-                        >
-                          {member.name}
-                        </Typography>
-                        <Typography
-                          variant="body2"
-                          color="text.secondary"
-                          sx={{ overflowWrap: "anywhere" }}
-                        >
+                      <Stack spacing={0.25} sx={s.memberInfo}>
+                        <Typography sx={s.memberName}>{member.name}</Typography>
+                        <Typography sx={s.memberEmail}>
                           {member.email}
                         </Typography>
                       </Stack>
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
                         spacing={0.5}
-                        sx={{ alignItems: "center", flexShrink: 0 }}
+                        sx={s.memberActions}
                       >
                         <Chip
                           label={member.auth_user_id ? "연결됨" : "인증 대기"}
-                          color={member.auth_user_id ? "primary" : "default"}
-                          variant="outlined"
                           size="small"
+                          sx={[
+                            s.statusBadge,
+                            member.auth_user_id
+                              ? s.statusConnected
+                              : s.statusPending,
+                          ]}
                         />
                         <IconButton
                           aria-label={`${member.name} 회원 삭제`}
@@ -306,7 +254,7 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                             setNotification("");
                             setMemberToDelete(member);
                           }}
-                          sx={{ width: 44, height: 44 }}
+                          sx={s.deleteButton}
                         >
                           <DeleteRoundedIcon />
                         </IconButton>
@@ -316,21 +264,14 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                 ))}
               </Stack>
             ) : (
-              <Stack
-                spacing={1.5}
-                sx={{ alignItems: "center", py: 5, textAlign: "center" }}
-              >
-                <PeopleOutlineRoundedIcon
-                  sx={{ fontSize: 40, color: "primary.main" }}
-                />
-                <Typography sx={{ fontWeight: 700 }}>
+              <Stack spacing={1.5} sx={s.empty}>
+                <Box sx={s.emptyIconBox}>
+                  <PeopleOutlineRoundedIcon sx={s.emptyIcon} />
+                </Box>
+                <Typography sx={s.emptyTitle}>
                   아직 등록된 회원이 없어요
                 </Typography>
-                <Typography
-                  variant="body2"
-                  color="text.secondary"
-                  sx={{ wordBreak: "keep-all" }}
-                >
+                <Typography sx={s.emptyDescription}>
                   이름과 이메일로 첫 회원을 등록해보세요.
                 </Typography>
               </Stack>
@@ -363,19 +304,14 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
             setNotification("");
           }
         }}
-        sx={{ width: "calc(100% - 32px)", maxWidth: 420 }}
+        sx={s.snackbar}
       >
         <Alert
           severity="success"
           variant="filled"
           role="status"
           onClose={() => setNotification("")}
-          sx={{
-            width: "100%",
-            bgcolor: "primary.main",
-            borderRadius: "14px",
-            boxShadow: "0 8px 32px rgba(23, 35, 28, 0.16)",
-          }}
+          sx={s.toast}
         >
           {notification}
         </Alert>
