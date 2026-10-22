@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 
 import Header from "@/src/app/components/Header/Header";
 import { createClient } from "@/src/lib/supabase/server";
+import { styles as s } from "./components/mypage.styles";
 import { ProfileCompletionForm } from "./components/ProfileCompletionForm";
 
 export default async function MyPage() {
@@ -20,14 +21,9 @@ export default async function MyPage() {
     .single();
 
   return (
-    <Box
-      sx={{
-        minHeight: "100dvh",
-        bgcolor: "background.default",
-      }}
-    >
+    <Box sx={s.page}>
       <Header showNavigation />
-      <Container component="main" maxWidth="sm" sx={{ py: { xs: 4, sm: 7 } }}>
+      <Container component="main" maxWidth="sm" sx={s.main}>
         {profileError || !profile ? (
           <Alert severity="error">
             내 정보를 불러오지 못했습니다. 페이지를 새로고침해주세요.

@@ -27,6 +27,8 @@ import {
 } from "@/src/lib/schemas/profileSchemas";
 import { createClient } from "@/src/lib/supabase/client";
 
+import { styles as s, visuallyHidden } from "./mypage.styles";
+
 type ProfileCompletionFormProps = {
   userId: string;
   displayName: string;
@@ -218,52 +220,15 @@ export function ProfileCompletionForm({
   }
 
   return (
-    <Paper
-      component="section"
-      elevation={0}
-      sx={{
-        p: { xs: 3, sm: 5 },
-        border: "1px solid",
-        borderColor: "#e7ede9",
-        borderRadius: "24px",
-        boxShadow: "0 8px 32px rgba(29, 77, 56, 0.035)",
-      }}
-    >
-      <Typography
-        variant="caption"
-        sx={{
-          display: "inline-block",
-          px: 1.5,
-          py: 0.5,
-          bgcolor: "#eef5f0",
-          borderRadius: "20px",
-          color: "primary.main",
-          fontWeight: 700,
-        }}
-      >
-        마이페이지
-      </Typography>
-      <Typography
-        component="h1"
-        sx={{
-          mt: 2,
-          fontSize: { xs: 25, sm: 30 },
-          fontWeight: 750,
-          letterSpacing: -0.8,
-          lineHeight: 1.4,
-          wordBreak: "keep-all",
-        }}
-      >
+    <Paper component="section" elevation={0} sx={s.card}>
+      <Typography sx={s.overline}>마이페이지</Typography>
+      <Typography component="h1" sx={s.title}>
         내 정보 관리
       </Typography>
-      <Typography
-        variant="body2"
-        color="text.secondary"
-        sx={{ mt: 1, mb: 4, lineHeight: 1.8, wordBreak: "keep-all" }}
-      >
+      <Typography sx={s.description}>
         회원에게 보여줄 이름, 사진과 소개글을 관리하세요.
         {!isComplete ? (
-          <Box component="span" sx={{ display: "block", mt: 1 }}>
+          <Box component="span" sx={s.notice}>
             프로필 사진과 소개글을 추가하면 다른 메뉴를 이용할 수 있어요.
           </Box>
         ) : null}
@@ -274,65 +239,17 @@ export function ProfileCompletionForm({
         noValidate
         spacing={2}
         onSubmit={handleSubmit}
-        sx={{
-          "& .MuiOutlinedInput-root": {
-            minHeight: 56,
-            bgcolor: "#fafcfb",
-            borderRadius: "16px",
-          },
-          "& .MuiFormHelperText-root": { minHeight: 23, lineHeight: "20px" },
-        }}
+        sx={s.form}
       >
-        <Box sx={{ textAlign: "center", py: 1 }}>
-          <Button
-            component="label"
-            disabled={isLoading}
-            sx={{
-              position: "relative",
-              p: 0,
-              minWidth: 0,
-              borderRadius: "50%",
-              transition: "box-shadow 160ms ease",
-              "&:hover": {
-                bgcolor: "transparent",
-                boxShadow: "0 0 0 6px #f1f6f3",
-              },
-              "&:focus-within": {
-                outline: "2px solid #276749",
-                outlineOffset: 5,
-              },
-              "&.Mui-disabled": { opacity: 0.6 },
-            }}
-          >
+        <Box sx={s.avatarSection}>
+          <Button component="label" disabled={isLoading} sx={s.avatarButton}>
             <Avatar
               src={previewUrl || savedAvatarUrl || undefined}
               alt="프로필 사진 미리보기"
-              sx={{
-                width: 112,
-                height: 112,
-                bgcolor: "#edf3ef",
-                color: "#92aa9a",
-                border: "1px solid #e0e9e3",
-              }}
+              sx={s.avatar}
             />
-            <Box
-              component="span"
-              sx={{
-                position: "absolute",
-                right: 0,
-                bottom: 0,
-                width: 34,
-                height: 34,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                borderRadius: "50%",
-                bgcolor: "primary.main",
-                color: "white",
-                border: "3px solid white",
-              }}
-            >
-              <AddRoundedIcon sx={{ fontSize: 22 }} />
+            <Box component="span" sx={s.avatarBadge}>
+              <AddRoundedIcon sx={s.avatarBadgeIcon} />
             </Box>
             <input
               type="file"
@@ -345,21 +262,13 @@ export function ProfileCompletionForm({
                 handleAvatarChange(event.target.files?.[0]);
                 event.target.value = "";
               }}
-              style={{
-                clip: "rect(0 0 0 0)",
-                clipPath: "inset(50%)",
-                height: 1,
-                overflow: "hidden",
-                position: "absolute",
-                whiteSpace: "nowrap",
-                width: 1,
-              }}
+              style={visuallyHidden}
             />
           </Button>
           <FormHelperText
             id="avatar-helper-text"
             error={Boolean(fieldErrors.avatar)}
-            sx={{ mx: 0, mt: 1.5, textAlign: "center" }}
+            sx={s.avatarHelper}
           >
             {fieldErrors.avatar || " "}
           </FormHelperText>
@@ -397,20 +306,7 @@ export function ProfileCompletionForm({
           disabled={isLoading}
           error={Boolean(fieldErrors.bio)}
           helperText={fieldErrors.bio || `${introduction.length} / 500자`}
-          sx={{
-            "& .MuiOutlinedInput-root": {
-              bgcolor: "#fafcfb",
-              borderRadius: "16px",
-              lineHeight: 1.8,
-              transition: "background-color 160ms ease",
-              "&:hover": { bgcolor: "#f5f8f6" },
-              "&.Mui-focused": { bgcolor: "white" },
-            },
-            "& .MuiOutlinedInput-notchedOutline": { borderColor: "#dfe7e2" },
-            "& .MuiFormHelperText-root": {
-              textAlign: fieldErrors.bio ? "left" : "right",
-            },
-          }}
+          sx={[s.bioField, !fieldErrors.bio && s.bioCounter]}
           onChange={(event) => {
             setIntroduction(event.target.value);
             setFieldErrors((previous) => ({ ...previous, bio: undefined }));
@@ -419,16 +315,7 @@ export function ProfileCompletionForm({
           slotProps={{ htmlInput: { maxLength: 500 } }}
         />
 
-        <Box
-          component="dl"
-          sx={{
-            m: 0,
-            py: 1,
-            borderTop: "1px solid #e7ede9",
-            display: "grid",
-            gap: 0,
-          }}
-        >
+        <Box component="dl" sx={s.infoList}>
           {[
             {
               label: "이메일",
@@ -442,50 +329,15 @@ export function ProfileCompletionForm({
               canCopy: true,
             },
           ].map(({ label, value, Icon, canCopy }) => (
-            <Box
-              key={label}
-              sx={{
-                display: "flex",
-                alignItems: "flex-start",
-                gap: 1.5,
-                py: 1.5,
-              }}
-            >
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: 36,
-                  height: 36,
-                  flexShrink: 0,
-                  bgcolor: "#f5f8f6",
-                  borderRadius: "12px",
-                  color: "text.secondary",
-                }}
-              >
-                <Icon sx={{ fontSize: 19 }} />
+            <Box key={label} sx={s.infoItem}>
+              <Box sx={s.infoIconBox}>
+                <Icon sx={s.infoIcon} />
               </Box>
-              <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography
-                  component="dt"
-                  variant="caption"
-                  color="text.secondary"
-                  sx={{ fontSize: 12, lineHeight: 1.5 }}
-                >
+              <Box sx={s.infoText}>
+                <Typography component="dt" sx={s.infoLabel}>
                   {label}
                 </Typography>
-                <Typography
-                  component="dd"
-                  sx={{
-                    m: 0,
-                    mt: 0.25,
-                    fontSize: 14,
-                    fontWeight: 500,
-                    lineHeight: 1.6,
-                    overflowWrap: "anywhere",
-                  }}
-                >
+                <Typography component="dd" sx={s.infoValue}>
                   {value}
                 </Typography>
               </Box>
@@ -493,19 +345,10 @@ export function ProfileCompletionForm({
                 <Button
                   type="button"
                   size="small"
-                  startIcon={<ContentCopyRoundedIcon sx={{ fontSize: 16 }} />}
+                  startIcon={<ContentCopyRoundedIcon sx={s.copyIcon} />}
                   onClick={handleCopyLink}
                   aria-label="공개 주소 링크 복사"
-                  sx={{
-                    flexShrink: 0,
-                    alignSelf: "center",
-                    minHeight: 40,
-                    px: 1.5,
-                    borderRadius: "12px",
-                    bgcolor: "#f5f8f6",
-                    fontWeight: 600,
-                    "&:hover": { bgcolor: "#eaf2ed" },
-                  }}
+                  sx={s.copyButton}
                 >
                   {isLinkCopied ? "복사 완료" : "링크 복사"}
                 </Button>
@@ -519,13 +362,7 @@ export function ProfileCompletionForm({
           variant="contained"
           size="large"
           disabled={isLoading}
-          sx={{
-            minHeight: 54,
-            borderRadius: "14px",
-            fontWeight: 700,
-            boxShadow: "none",
-            "&:hover": { boxShadow: "none" },
-          }}
+          sx={s.submitButton}
         >
           {isLoading ? (
             <CircularProgress size={22} color="inherit" />
