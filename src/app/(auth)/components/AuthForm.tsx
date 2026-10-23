@@ -18,11 +18,12 @@ import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
 import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
+import type { OAuthProvider } from "@/src/features/auth/api";
 import {
   authFormMessages,
   getAuthSubmitErrorMessage,
 } from "@/src/features/auth/errors";
-import { useGoogleLogin, useLogin, useSignup } from "@/src/features/auth/hooks";
+import { useLogin, useOAuthLogin, useSignup } from "@/src/features/auth/hooks";
 
 import {
   validateAuthForm,
@@ -39,11 +40,26 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const login = useLogin();
   const signup = useSignup();
-  const googleLogin = useGoogleLogin();
-  const isGoogleRedirecting = googleLogin.isPending || googleLogin.isSuccess;
-  const isLoading = login.isPending || signup.isPending || isGoogleRedirecting;
+  const oauthLogin = useOAuthLogin();
+  // 성공 후에도 Google·카카오로 이동하는 동안에는 버튼을 막아둔다.
+  const redirectingProvider =
+    oauthLogin.isPending || oauthLogin.isSuccess ? oauthLogin.variables : null;
+  const isLoading =
+    login.isPending || signup.isPending || Boolean(redirectingProvider);
   const isSubmitting = useRef(false);
   const [verificationEmail, setVerificationEmail] = useState("");
+  const { reset: resetOAuthLogin } = oauthLogin;
+
+  // 뒤로가기로 bfcache에서 복원되면 로딩 상태가 그대로 남으므로 초기화한다.
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) {
+        resetOAuthLogin();
+      }
+    }
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [resetOAuthLogin]);
 
   useEffect(() => {
     if (!verificationEmail) {
@@ -67,9 +83,9 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
     setMessage("");
   }
 
-  function handleGoogleLogin() {
+  function handleOAuthLogin(provider: OAuthProvider) {
     setMessage("");
-    googleLogin.mutate(undefined, {
+    oauthLogin.mutate(provider, {
       onError: (error) => setMessage(getAuthSubmitErrorMessage(error)),
     });
   }
@@ -173,27 +189,55 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
 
   return (
     <Box component="section">
-      <Button
-        type="button"
-        variant="outlined"
-        size="large"
-        fullWidth
-        startIcon={
-          isGoogleRedirecting ? undefined : (
-            <Image src="/images/google-g.svg" alt="" width={35} height={35} />
-          )
-        }
-        disabled={isLoading}
-        aria-busy={isGoogleRedirecting}
-        onClick={handleGoogleLogin}
-        sx={s.googleButton}
-      >
-        {isGoogleRedirecting ? (
-          <CircularProgress size={22} color="inherit" aria-hidden="true" />
-        ) : (
-          "Google로 계속하기"
-        )}
-      </Button>
+      <Stack spacing={1.5}>
+        <Button
+          type="button"
+          variant="contained"
+          size="large"
+          fullWidth
+          startIcon={
+            redirectingProvider === "kakao" ? undefined : (
+              <Image
+                src="/images/kakao-symbol.svg"
+                alt=""
+                width={35}
+                height={35}
+              />
+            )
+          }
+          disabled={isLoading}
+          aria-busy={redirectingProvider === "kakao"}
+          onClick={() => handleOAuthLogin("kakao")}
+          sx={s.kakaoButton}
+        >
+          {redirectingProvider === "kakao" ? (
+            <CircularProgress size={22} color="inherit" aria-hidden="true" />
+          ) : (
+            "카카오로 계속하기"
+          )}
+        </Button>
+        <Button
+          type="button"
+          variant="outlined"
+          size="large"
+          fullWidth
+          startIcon={
+            redirectingProvider === "google" ? undefined : (
+              <Image src="/images/google-g.svg" alt="" width={35} height={35} />
+            )
+          }
+          disabled={isLoading}
+          aria-busy={redirectingProvider === "google"}
+          onClick={() => handleOAuthLogin("google")}
+          sx={s.googleButton}
+        >
+          {redirectingProvider === "google" ? (
+            <CircularProgress size={22} color="inherit" aria-hidden="true" />
+          ) : (
+            "Google로 계속하기"
+          )}
+        </Button>
+      </Stack>
       <Divider sx={s.divider}>또는</Divider>
       <Stack
         component="form"

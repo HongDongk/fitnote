@@ -6,6 +6,7 @@ import { getSignupResponseError } from "./errors";
 
 export type LoginValues = { email: string; password: string };
 export type SignupValues = LoginValues & { displayName: string };
+export type OAuthProvider = "google" | "kakao";
 
 async function ensureProfile(supabase: SupabaseClient<Database>, user: User) {
   const displayName =
@@ -72,9 +73,9 @@ export async function signUp({ email, password, displayName }: SignupValues) {
   return { ...data, ...profileResult };
 }
 
-export async function signInWithGoogle() {
+export async function signInWithOAuthProvider(provider: OAuthProvider) {
   const { error } = await createClient().auth.signInWithOAuth({
-    provider: "google",
+    provider,
     options: { redirectTo: `${window.location.origin}/auth/callback` },
   });
   if (error) {

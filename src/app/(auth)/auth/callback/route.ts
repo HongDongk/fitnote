@@ -26,7 +26,7 @@ const avatarExtensions: Record<string, string> = {
 };
 const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
 
-function getGoogleAvatarUrl(metadata: Record<string, unknown>) {
+function getOAuthAvatarUrl(metadata: Record<string, unknown>) {
   const candidate = metadata.avatar_url ?? metadata.picture;
   if (typeof candidate !== "string") {
     return null;
@@ -35,24 +35,32 @@ function getGoogleAvatarUrl(metadata: Record<string, unknown>) {
   try {
     const url = new URL(candidate);
     if (
-      url.protocol !== "https:" ||
-      !url.hostname.endsWith(".googleusercontent.com")
+      url.protocol === "https:" &&
+      url.hostname.endsWith(".googleusercontent.com")
     ) {
-      return null;
+      return url.href.replace(/=s\d+-c$/, "=s400-c");
     }
-    return url.href.replace(/=s\d+-c$/, "=s400-c");
+    // 카카오는 http 주소를 주기도 하므로 https로 바꿔 요청한다.
+    if (
+      (url.protocol === "https:" || url.protocol === "http:") &&
+      url.hostname.endsWith(".kakaocdn.net")
+    ) {
+      url.protocol = "https:";
+      return url.href;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-// 구글 프로필 사진을 내려받아 본인 폴더에 올린다. 실패해도 로그인은 계속한다.
-async function saveGoogleAvatar(
+// Google·카카오 프로필 사진을 내려받아 본인 폴더에 올린다. 실패해도 로그인은 계속한다.
+async function saveOAuthAvatar(
   supabase: SupabaseServerClient,
   userId: string,
   metadata: Record<string, unknown>,
 ) {
-  const avatarUrl = getGoogleAvatarUrl(metadata);
+  const avatarUrl = getOAuthAvatarUrl(metadata);
   if (!avatarUrl) {
     return;
   }
@@ -165,7 +173,7 @@ export async function GET(request: Request) {
       );
     }
 
-    await saveGoogleAvatar(supabase, user.id, user.user_metadata);
+    await saveOAuthAvatar(supabase, user.id, user.user_metadata);
     profileSlug = slug;
   }
 

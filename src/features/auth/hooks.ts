@@ -2,7 +2,7 @@
 
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { signIn, signInWithGoogle, signOut, signUp } from "./api";
+import { signIn, signInWithOAuthProvider, signOut, signUp } from "./api";
 
 export function useLogin() {
   const queryClient = useQueryClient();
@@ -26,8 +26,8 @@ export function useSignup() {
   });
 }
 
-export function useGoogleLogin() {
-  return useMutation({ mutationFn: signInWithGoogle, retry: false });
+export function useOAuthLogin() {
+  return useMutation({ mutationFn: signInWithOAuthProvider, retry: false });
 }
 
 export function useLogout() {

@@ -100,7 +100,17 @@ export const styles = {
     color: grey.title,
     fontSize: 17,
     fontWeight: 700,
-    "&:hover": { borderColor: grey.lineHover, bgcolor: grey.bg },
+    "&:hover": { borderColor: grey.line, bgcolor: "transparent" },
+  },
+  kakaoButton: {
+    minHeight: 56,
+    borderRadius: "16px",
+    bgcolor: "#FEE500",
+    color: "rgba(0, 0, 0, 0.85)",
+    fontSize: 17,
+    fontWeight: 700,
+    boxShadow: "none",
+    "&:hover": { bgcolor: "#FEE500", boxShadow: "none" },
   },
   divider: {
     my: 3,
