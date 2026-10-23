@@ -67,7 +67,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
                 다시 만나서 반가워요 :)
               </Typography>
               <Typography sx={s.description}>
-                이메일과 비밀번호로 로그인하세요.
+                Google 계정이나 이메일로 로그인하세요.
               </Typography>
             </Stack>
 
@@ -86,7 +86,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
 
             {error === "auth" && (
               <Typography color="error" role="alert" sx={s.errorText}>
-                이메일 인증에 실패했습니다.
+                인증에 실패했습니다. 다시 시도해주세요.
               </Typography>
             )}
             {error === "profile" && (

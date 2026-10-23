@@ -65,10 +65,21 @@ export async function signUp({ email, password, displayName }: SignupValues) {
     throw responseError;
   }
 
-  const profileResult = data.session && data.user
-    ? await ensureProfile(supabase, data.user)
-    : { profileError: null, profileSlug: null };
+  const profileResult =
+    data.session && data.user
+      ? await ensureProfile(supabase, data.user)
+      : { profileError: null, profileSlug: null };
   return { ...data, ...profileResult };
+}
+
+export async function signInWithGoogle() {
+  const { error } = await createClient().auth.signInWithOAuth({
+    provider: "google",
+    options: { redirectTo: `${window.location.origin}/auth/callback` },
+  });
+  if (error) {
+    throw error;
+  }
 }
 
 export async function signOut() {

@@ -28,9 +28,18 @@ export default function Footer() {
               </Link>
             </Typography>
           </Stack>
-          <Typography sx={s.copyright}>
-            © {new Date().getFullYear()} Fitnote
-          </Typography>
+          <Stack direction="row" spacing={1.5} sx={s.meta}>
+            <Link
+              href="/privacy"
+              style={linkTextColor.privacy}
+              sx={s.privacyLink}
+            >
+              개인정보처리방침
+            </Link>
+            <Typography sx={s.copyright}>
+              © {new Date().getFullYear()} Fitnote
+            </Typography>
+          </Stack>
         </Stack>
       </Container>
     </Box>

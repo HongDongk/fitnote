@@ -93,6 +93,21 @@ export const styles = {
       lineHeight: "20px",
     },
   },
+  googleButton: {
+    minHeight: 56,
+    borderRadius: "16px",
+    borderColor: grey.line,
+    color: grey.title,
+    fontSize: 17,
+    fontWeight: 700,
+    "&:hover": { borderColor: grey.lineHover, bgcolor: grey.bg },
+  },
+  divider: {
+    my: 3,
+    color: grey.sub,
+    fontSize: 14,
+    "&::before, &::after": { borderColor: grey.line },
+  },
   submitButton: {
     mt: 1,
     minHeight: 56,

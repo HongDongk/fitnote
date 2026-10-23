@@ -7,11 +7,13 @@ import {
   Box,
   Button,
   CircularProgress,
+  Divider,
   InputAdornment,
   Stack,
   TextField,
   Typography,
 } from "@mui/material";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
@@ -20,7 +22,7 @@ import {
   authFormMessages,
   getAuthSubmitErrorMessage,
 } from "@/src/features/auth/errors";
-import { useLogin, useSignup } from "@/src/features/auth/hooks";
+import { useGoogleLogin, useLogin, useSignup } from "@/src/features/auth/hooks";
 
 import {
   validateAuthForm,
@@ -37,7 +39,9 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const login = useLogin();
   const signup = useSignup();
-  const isLoading = login.isPending || signup.isPending;
+  const googleLogin = useGoogleLogin();
+  const isGoogleRedirecting = googleLogin.isPending || googleLogin.isSuccess;
+  const isLoading = login.isPending || signup.isPending || isGoogleRedirecting;
   const isSubmitting = useRef(false);
   const [verificationEmail, setVerificationEmail] = useState("");
 
@@ -61,6 +65,13 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
       ...(field === "password" ? { passwordConfirm: undefined } : {}),
     }));
     setMessage("");
+  }
+
+  function handleGoogleLogin() {
+    setMessage("");
+    googleLogin.mutate(undefined, {
+      onError: (error) => setMessage(getAuthSubmitErrorMessage(error)),
+    });
   }
 
   async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
@@ -162,6 +173,28 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
 
   return (
     <Box component="section">
+      <Button
+        type="button"
+        variant="outlined"
+        size="large"
+        fullWidth
+        startIcon={
+          isGoogleRedirecting ? undefined : (
+            <Image src="/images/google-g.svg" alt="" width={35} height={35} />
+          )
+        }
+        disabled={isLoading}
+        aria-busy={isGoogleRedirecting}
+        onClick={handleGoogleLogin}
+        sx={s.googleButton}
+      >
+        {isGoogleRedirecting ? (
+          <CircularProgress size={22} color="inherit" aria-hidden="true" />
+        ) : (
+          "Google로 계속하기"
+        )}
+      </Button>
+      <Divider sx={s.divider}>또는</Divider>
       <Stack
         component="form"
         noValidate
