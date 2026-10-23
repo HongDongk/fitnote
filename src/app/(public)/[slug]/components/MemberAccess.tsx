@@ -1,16 +1,30 @@
 "use client";
 
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import MailOutlineRoundedIcon from "@mui/icons-material/MailOutlineRounded";
-import { Box, Button, Stack, TextField, Typography } from "@mui/material";
+import {
+  Box,
+  Button,
+  Divider,
+  InputAdornment,
+  Stack,
+  TextField,
+  Typography,
+} from "@mui/material";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
+import { OAuthButtons } from "@/src/app/components/OAuthButtons/OAuthButtons";
+import type { OAuthProvider } from "@/src/features/auth/api";
 import {
   getMemberCallbackMessage,
   memberMessages,
 } from "@/src/features/members/errors";
-import { useRequestMemberLogin } from "@/src/features/members/hooks";
+import {
+  useRequestMemberLogin,
+  useRequestMemberOAuthLogin,
+} from "@/src/features/members/hooks";
 import { memberLoginSchema } from "@/src/lib/schemas/memberSchemas";
 
 import { styles as s } from "./slug.styles";
@@ -26,6 +40,14 @@ export function MemberAccess({
 }: MemberAccessProps) {
   const router = useRouter();
   const requestLogin = useRequestMemberLogin();
+  const oauthLogin = useRequestMemberOAuthLogin();
+  // 성공 후에도 Google·카카오로 이동하는 동안에는 버튼을 막아둔다.
+  const redirectingProvider =
+    oauthLogin.isPending || oauthLogin.isSuccess
+      ? oauthLogin.variables?.provider
+      : null;
+  const isLoading = requestLogin.isPending || Boolean(redirectingProvider);
+  const { reset: resetOAuthLogin } = oauthLogin;
   const submitting = useRef(false);
   const [email, setEmail] = useState("");
   const [sentEmail, setSentEmail] = useState("");
@@ -40,6 +62,33 @@ export function MemberAccess({
     window.addEventListener("focus", refreshSession);
     return () => window.removeEventListener("focus", refreshSession);
   }, [sentEmail, router]);
+
+  // 뒤로가기로 bfcache에서 복원되면 로딩 상태가 그대로 남으므로 초기화한다.
+  useEffect(() => {
+    function handlePageShow(event: PageTransitionEvent) {
+      if (event.persisted) {
+        resetOAuthLogin();
+      }
+    }
+
+    window.addEventListener("pageshow", handlePageShow);
+    return () => window.removeEventListener("pageshow", handlePageShow);
+  }, [resetOAuthLogin]);
+
+  function handleOAuthLogin(provider: OAuthProvider) {
+    setMessage("");
+    oauthLogin.mutate(
+      { instructorSlug, provider },
+      {
+        onError: (error) =>
+          setMessage(
+            error instanceof Error
+              ? error.message
+              : memberMessages.oauthRequestFailed,
+          ),
+      },
+    );
+  }
 
   async function sendEmail() {
     if (submitting.current) return;
@@ -113,50 +162,70 @@ export function MemberAccess({
           </Stack>
         </Stack>
       ) : (
-        <Box
-          component="form"
-          noValidate
-          onSubmit={(event) => {
-            event.preventDefault();
-            void sendEmail();
-          }}
-        >
-          <Stack spacing={2} sx={s.accessForm}>
-            <Box>
-              <Typography component="h2" sx={s.sectionTitle}>
-                회원 로그인
-              </Typography>
-              <Typography sx={s.sectionDescription}>
-                강사님께 등록한 이메일을 입력해주세요. 비밀번호 없이 메일 링크로
-                로그인할 수 있어요.
-              </Typography>
-            </Box>
+        <Stack spacing={3}>
+          <Box>
+            <Typography component="h2" sx={s.sectionTitle}>
+              회원 로그인
+            </Typography>
+            <Typography sx={s.sectionDescription}>
+              강사님께 등록한 이메일과 같은 계정으로 로그인해주세요.
+            </Typography>
+          </Box>
+          <OAuthButtons
+            redirectingProvider={redirectingProvider}
+            disabled={isLoading}
+            onSelect={handleOAuthLogin}
+          />
+          <Divider sx={s.accessDivider}>또는</Divider>
+          <Stack
+            component="form"
+            noValidate
+            spacing={1}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void sendEmail();
+            }}
+            sx={s.accessForm}
+          >
             <TextField
               name="email"
               label="이메일"
               type="email"
+              placeholder="name@example.com"
               autoComplete="email"
               required
               fullWidth
               value={email}
-              disabled={requestLogin.isPending}
+              disabled={isLoading}
               error={Boolean(emailError)}
-              helperText={emailError || " "}
+              helperText={
+                emailError || "비밀번호 없이 메일 링크로 로그인할 수 있어요."
+              }
               onChange={(event) => {
                 setEmail(event.target.value);
                 setEmailError("");
+              }}
+              slotProps={{
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <EmailOutlinedIcon color="action" />
+                    </InputAdornment>
+                  ),
+                },
               }}
             />
             <Button
               type="submit"
               variant="contained"
-              disabled={requestLogin.isPending}
+              size="large"
+              disabled={isLoading}
               sx={s.accessSubmit}
             >
-              {requestLogin.isPending ? "메일 발송 중…" : "이메일 인증하기"}
+              {requestLogin.isPending ? "메일 발송 중…" : "이메일로 인증하기"}
             </Button>
           </Stack>
-        </Box>
+        </Stack>
       )}
       <MessageDialog
         open={Boolean(message)}

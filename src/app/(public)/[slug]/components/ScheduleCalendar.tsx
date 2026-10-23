@@ -30,6 +30,7 @@ import {
   useScheduleRealtime,
 } from "@/src/features/schedules/hooks";
 
+import { useOpenMemberLogin } from "./MemberLogin";
 import { styles as s } from "./slug.styles";
 
 const timezone = "Asia/Seoul";
@@ -126,6 +127,7 @@ export function ScheduleCalendar({
   const saveSchedule = useSaveSchedule(instructorId);
   const removeSchedule = useDeleteSchedule(instructorId);
   const requestBooking = useRequestBooking(instructorId, accountId);
+  const openMemberLogin = useOpenMemberLogin();
   const events = useMemo<SchedulerEvent[]>(
     () =>
       (schedulesQuery.data ?? []).map((schedule) => ({
@@ -411,6 +413,15 @@ export function ScheduleCalendar({
           if (suppressClick.current) {
             suppressClick.current = false;
             event.stopPropagation();
+            return;
+          }
+          // 로그인 전 방문자가 빈 시간대를 누르면 로그인 모달을 연다.
+          if (
+            openMemberLogin &&
+            !canSelect &&
+            (event.target as HTMLElement).closest(`.${timeGridColumnClass}`)
+          ) {
+            openMemberLogin();
           }
         }}
         sx={s.calendarBox}

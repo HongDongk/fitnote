@@ -1,5 +1,7 @@
+import { isAuthError } from "@supabase/supabase-js";
 import type { z } from "zod";
 
+import type { OAuthProvider } from "@/src/features/auth/api";
 import { ApiError } from "@/src/lib/api/error";
 import {
   memberLinkSchema,
@@ -186,6 +188,37 @@ export async function requestMemberLogin(values: RequestMemberLoginInput) {
     }
   } catch (error) {
     throw getMemberAuthRequestError(error);
+  }
+}
+
+export async function requestMemberOAuthLogin({
+  instructorSlug,
+  provider,
+}: LinkMemberAccountInput & { provider: OAuthProvider }) {
+  const result = memberLinkSchema.safeParse({ instructorSlug });
+  if (!result.success) {
+    throw getMemberValidationError(result.error);
+  }
+
+  try {
+    const callbackUrl = new URL(
+      "/auth/member/callback",
+      window.location.origin,
+    );
+    callbackUrl.searchParams.set("instructorSlug", result.data.instructorSlug);
+
+    const { error } = await createClient().auth.signInWithOAuth({
+      provider,
+      options: { redirectTo: callbackUrl.toString() },
+    });
+
+    if (error) {
+      throw error;
+    }
+  } catch (error) {
+    throw isAuthError(error)
+      ? getMemberAuthRequestError(error)
+      : new ApiError(memberMessages.oauthRequestFailed, 500);
   }
 }
 

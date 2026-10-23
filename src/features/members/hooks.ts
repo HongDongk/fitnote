@@ -9,6 +9,7 @@ import {
   getMyMember,
   linkMemberAccount,
   requestMemberLogin,
+  requestMemberOAuthLogin,
   type CreateMemberInput,
   type MemberSummary,
 } from "./api";
@@ -78,4 +79,8 @@ export function useMyMember(instructorSlug: string, accountId: string | null) {
 
 export function useRequestMemberLogin() {
   return useMutation({ mutationFn: requestMemberLogin, retry: false });
+}
+
+export function useRequestMemberOAuthLogin() {
+  return useMutation({ mutationFn: requestMemberOAuthLogin, retry: false });
 }

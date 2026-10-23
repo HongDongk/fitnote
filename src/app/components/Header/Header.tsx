@@ -3,6 +3,7 @@ import Image from "next/image";
 
 import HeaderNavigation from "@/src/app/components/Header/HeaderNavigation";
 import { LogoutButton } from "@/src/app/components/Header/LogoutButton";
+import { getMetadataDisplayName } from "@/src/features/auth/displayName";
 import { createClient } from "@/src/lib/supabase/server";
 
 import { linkTextColor, styles as s } from "./header.styles";
@@ -46,7 +47,9 @@ export default async function Header({
       .order("id", { ascending: true })
       .limit(1)
       .maybeSingle();
-    displayName = member?.name;
+    // 회원 연결 전이면 Google·카카오 계정 이름이라도 보여준다.
+    displayName =
+      member?.name ?? getMetadataDisplayName(user.user_metadata);
   }
 
   return (

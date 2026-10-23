@@ -119,8 +119,46 @@ export const styles = {
   sectionDescription,
 
   // 회원 로그인 (MemberAccess)
-  accessForm: outlinedInput,
-  accessSubmit: { ...button, minHeight: 56, fontSize: 17, fontWeight: 700 },
+  accessDivider: {
+    color: grey.sub,
+    fontSize: 14,
+    "&::before, &::after": { borderColor: grey.line },
+  },
+  accessForm: {
+    ...outlinedInput,
+    "& .MuiInputAdornment-root .MuiSvgIcon-root": { color: grey.sub },
+    "& .MuiFormHelperText-root": {
+      minHeight: 23,
+      mx: 0.5,
+      fontSize: 13,
+      lineHeight: "20px",
+    },
+  },
+  accessSubmit: {
+    ...button,
+    mt: 1,
+    minHeight: 56,
+    borderRadius: "16px",
+    fontSize: 17,
+    fontWeight: 700,
+  },
+  // 회원 로그인 모달 (MemberLogin)
+  loginBackdrop: { bgcolor: "rgba(0, 0, 0, 0.4)" },
+  loginPaper: {
+    position: "relative",
+    m: "20px",
+    width: "calc(100% - 40px)",
+    maxHeight: "calc(100dvh - 40px)",
+    p: { xs: "28px 20px 24px", sm: "32px 28px 28px" },
+    borderRadius: "24px",
+    boxShadow: "none",
+  },
+  loginClose: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    color: grey.sub,
+  },
   sent: { textAlign: "center", alignItems: "center" },
   sentIconBox: {
     width: 64,

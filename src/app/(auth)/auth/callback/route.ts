@@ -1,21 +1,6 @@
+import { getMetadataDisplayName } from "@/src/features/auth/displayName";
 import { createClient } from "@/src/lib/supabase/server";
 import { NextResponse } from "next/server";
-
-function getDisplayName(metadata: Record<string, unknown>) {
-  const candidates = [
-    metadata.display_name,
-    metadata.name,
-    metadata.nickname,
-    metadata.full_name,
-    metadata.preferred_username,
-  ];
-  const displayName = candidates.find(
-    (candidate): candidate is string =>
-      typeof candidate === "string" && candidate.trim().length > 0,
-  );
-
-  return displayName?.trim().slice(0, 50) ?? "강사";
-}
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
@@ -148,7 +133,7 @@ export async function GET(request: Request) {
       .from("profiles")
       .insert({
         id: user.id,
-        display_name: getDisplayName(user.user_metadata),
+        display_name: getMetadataDisplayName(user.user_metadata) ?? "강사",
         slug,
       });
 

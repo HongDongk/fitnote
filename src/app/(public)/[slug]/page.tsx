@@ -16,7 +16,7 @@ import { memberLinkSchema } from "@/src/lib/schemas/memberSchemas";
 import { siteName } from "@/src/lib/site";
 import { createClient } from "@/src/lib/supabase/server";
 import { BookingRequests } from "./components/BookingRequests";
-import { MemberAccess } from "./components/MemberAccess";
+import { MemberLoginProvider } from "./components/MemberLogin";
 import { ScheduleCalendar } from "./components/ScheduleCalendar";
 import { styles as s } from "./components/slug.styles";
 
@@ -137,10 +137,16 @@ export default async function InstructorDashboardPage({
         instructorId={profile.id}
       />
       <Container component="main" maxWidth="lg" sx={s.main}>
-        <Stack spacing={3}>
-          {!isLoggedIn && (
-            <Paper elevation={0} sx={s.card}>
-              {authUnavailable ? (
+        <MemberLoginProvider
+          enabled={!isLoggedIn && !authUnavailable}
+          instructorSlug={slug}
+          initialError={
+            typeof memberError === "string" ? memberError : undefined
+          }
+        >
+          <Stack spacing={3}>
+            {!isLoggedIn && authUnavailable && (
+              <Paper elevation={0} sx={s.card}>
                 <Alert
                   severity="error"
                   action={
@@ -151,82 +157,75 @@ export default async function InstructorDashboardPage({
                 >
                   로그인 상태를 확인하지 못했습니다. 잠시 후 다시 시도해주세요.
                 </Alert>
-              ) : (
-                <MemberAccess
-                  instructorSlug={slug}
-                  initialError={
-                    typeof memberError === "string" ? memberError : undefined
-                  }
-                />
-              )}
-            </Paper>
-          )}
-          <Paper elevation={0} sx={s.card}>
-            <Stack spacing={3}>
-              {!isInstructor && (
-                <Stack direction="row" spacing={2} sx={s.profile}>
-                  <Avatar
-                    src={profile.avatar_url || undefined}
-                    alt={`${profile.display_name} 프로필`}
-                    sx={s.profileAvatar}
-                  >
-                    {profile.display_name.slice(0, 1)}
-                  </Avatar>
-                  <Box sx={s.profileText}>
-                    <Typography component="h1" sx={s.profileName}>
-                      {profile.display_name} 강사님
+              </Paper>
+            )}
+            <Paper elevation={0} sx={s.card}>
+              <Stack spacing={3}>
+                {!isInstructor && (
+                  <Stack direction="row" spacing={2} sx={s.profile}>
+                    <Avatar
+                      src={profile.avatar_url || undefined}
+                      alt={`${profile.display_name} 프로필`}
+                      sx={s.profileAvatar}
+                    >
+                      {profile.display_name.slice(0, 1)}
+                    </Avatar>
+                    <Box sx={s.profileText}>
+                      <Typography component="h1" sx={s.profileName}>
+                        {profile.display_name} 강사님
+                      </Typography>
+                      <Typography sx={s.profileBio}>
+                        {profile.bio || "수업 소개를 준비하고 있습니다."}
+                      </Typography>
+                    </Box>
+                  </Stack>
+                )}
+                {(isInstructor || isLoggedIn) && (
+                  <Box>
+                    <Typography component="h2" sx={s.sectionTitle}>
+                      {isInstructor ? "나의 스케줄" : "수업 일정 신청"}
                     </Typography>
-                    <Typography sx={s.profileBio}>
-                      {profile.bio || "수업 소개를 준비하고 있습니다."}
+                    <Typography sx={s.sectionDescription}>
+                      {isInstructor
+                        ? "등록된 수업 일정을 확인하고 관리하세요."
+                        : "원하는 시간대를 선택해 수업을 신청해보세요."}
                     </Typography>
                   </Box>
-                </Stack>
-              )}
-              {(isInstructor || isLoggedIn) && (
-                <Box>
-                  <Typography component="h2" sx={s.sectionTitle}>
-                    {isInstructor ? "나의 스케줄" : "수업 일정 신청"}
-                  </Typography>
-                  <Typography sx={s.sectionDescription}>
-                    {isInstructor
-                      ? "등록된 수업 일정을 확인하고 관리하세요."
-                      : "원하는 시간대를 선택해 수업을 신청해보세요."}
-                  </Typography>
-                </Box>
-              )}
-              {isLoggedIn && !isInstructor && !member && (
-                <Alert severity={memberReadError ? "error" : "info"}>
-                  {memberReadError
-                    ? "회원 정보를 확인하지 못했습니다. 새로고침 후 다시 시도해주세요."
-                    : "강사님께 등록한 이메일로 로그인한 회원만 수업을 신청할 수 있습니다. 강사님께 회원 등록을 확인해주세요."}
-                </Alert>
-              )}
-              {isInstructor && (
-                <BookingRequests
+                )}
+                {isLoggedIn && !isInstructor && !member && (
+                  <Alert severity={memberReadError ? "error" : "info"}>
+                    {memberReadError
+                      ? "회원 정보를 확인하지 못했습니다. 새로고침 후 다시 시도해주세요."
+                      : "강사님께 등록한 이메일로 로그인한 회원만 수업을 신청할 수 있습니다. 강사님께 회원 등록을 확인해주세요."}
+                  </Alert>
+                )}
+                {isInstructor && (
+                  <BookingRequests
+                    instructorId={profile.id}
+                    accountId={accountId}
+                    memberId={null}
+                    isInstructor
+                  />
+                )}
+                <ScheduleCalendar
+                  today={new Date().toISOString()}
                   instructorId={profile.id}
+                  canEdit={isInstructor}
+                  canRequest={Boolean(member)}
                   accountId={accountId}
-                  memberId={null}
-                  isInstructor
                 />
-              )}
-              <ScheduleCalendar
-                today={new Date().toISOString()}
-                instructorId={profile.id}
-                canEdit={isInstructor}
-                canRequest={Boolean(member)}
-                accountId={accountId}
-              />
-              {!isInstructor && member && (
-                <BookingRequests
-                  instructorId={profile.id}
-                  accountId={accountId}
-                  memberId={member.id}
-                  isInstructor={false}
-                />
-              )}
-            </Stack>
-          </Paper>
-        </Stack>
+                {!isInstructor && member && (
+                  <BookingRequests
+                    instructorId={profile.id}
+                    accountId={accountId}
+                    memberId={member.id}
+                    isInstructor={false}
+                  />
+                )}
+              </Stack>
+            </Paper>
+          </Stack>
+        </MemberLoginProvider>
       </Container>
     </Box>
   );

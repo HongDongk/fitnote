@@ -13,11 +13,11 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, type SubmitEvent } from "react";
 
 import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
+import { OAuthButtons } from "@/src/app/components/OAuthButtons/OAuthButtons";
 import type { OAuthProvider } from "@/src/features/auth/api";
 import {
   authFormMessages,
@@ -189,55 +189,11 @@ export function AuthForm({ mode = "sign-in" }: { mode?: AuthMode }) {
 
   return (
     <Box component="section">
-      <Stack spacing={1.5}>
-        <Button
-          type="button"
-          variant="contained"
-          size="large"
-          fullWidth
-          startIcon={
-            redirectingProvider === "kakao" ? undefined : (
-              <Image
-                src="/images/kakao-symbol.svg"
-                alt=""
-                width={35}
-                height={35}
-              />
-            )
-          }
-          disabled={isLoading}
-          aria-busy={redirectingProvider === "kakao"}
-          onClick={() => handleOAuthLogin("kakao")}
-          sx={s.kakaoButton}
-        >
-          {redirectingProvider === "kakao" ? (
-            <CircularProgress size={22} color="inherit" aria-hidden="true" />
-          ) : (
-            "카카오로 계속하기"
-          )}
-        </Button>
-        <Button
-          type="button"
-          variant="outlined"
-          size="large"
-          fullWidth
-          startIcon={
-            redirectingProvider === "google" ? undefined : (
-              <Image src="/images/google-g.svg" alt="" width={35} height={35} />
-            )
-          }
-          disabled={isLoading}
-          aria-busy={redirectingProvider === "google"}
-          onClick={() => handleOAuthLogin("google")}
-          sx={s.googleButton}
-        >
-          {redirectingProvider === "google" ? (
-            <CircularProgress size={22} color="inherit" aria-hidden="true" />
-          ) : (
-            "Google로 계속하기"
-          )}
-        </Button>
-      </Stack>
+      <OAuthButtons
+        redirectingProvider={redirectingProvider}
+        disabled={isLoading}
+        onSelect={handleOAuthLogin}
+      />
       <Divider sx={s.divider}>또는</Divider>
       <Stack
         component="form"
