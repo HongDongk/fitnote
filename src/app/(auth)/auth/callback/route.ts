@@ -17,6 +17,79 @@ function getDisplayName(metadata: Record<string, unknown>) {
   return displayName?.trim().slice(0, 50) ?? "강사";
 }
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+const avatarExtensions: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+};
+const MAX_AVATAR_BYTES = 5 * 1024 * 1024;
+
+function getGoogleAvatarUrl(metadata: Record<string, unknown>) {
+  const candidate = metadata.avatar_url ?? metadata.picture;
+  if (typeof candidate !== "string") {
+    return null;
+  }
+
+  try {
+    const url = new URL(candidate);
+    if (
+      url.protocol !== "https:" ||
+      !url.hostname.endsWith(".googleusercontent.com")
+    ) {
+      return null;
+    }
+    return url.href.replace(/=s\d+-c$/, "=s400-c");
+  } catch {
+    return null;
+  }
+}
+
+// 구글 프로필 사진을 내려받아 본인 폴더에 올린다. 실패해도 로그인은 계속한다.
+async function saveGoogleAvatar(
+  supabase: SupabaseServerClient,
+  userId: string,
+  metadata: Record<string, unknown>,
+) {
+  const avatarUrl = getGoogleAvatarUrl(metadata);
+  if (!avatarUrl) {
+    return;
+  }
+
+  try {
+    const response = await fetch(avatarUrl, {
+      signal: AbortSignal.timeout(5000),
+    });
+    const contentType = response.headers.get("content-type")?.split(";")[0];
+    const extension = contentType ? avatarExtensions[contentType] : undefined;
+    if (!response.ok || !contentType || !extension) {
+      return;
+    }
+
+    const image = await response.arrayBuffer();
+    if (image.byteLength === 0 || image.byteLength > MAX_AVATAR_BYTES) {
+      return;
+    }
+
+    const path = `${userId}/${crypto.randomUUID()}.${extension}`;
+    const { error: uploadError } = await supabase.storage
+      .from("profile-avatars")
+      .upload(path, image, { contentType, upsert: false });
+    if (uploadError) {
+      return;
+    }
+
+    const { data } = supabase.storage
+      .from("profile-avatars")
+      .getPublicUrl(path);
+    await supabase
+      .from("profiles")
+      .update({ avatar_url: data.publicUrl })
+      .eq("id", userId);
+  } catch {}
+}
+
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
@@ -92,6 +165,7 @@ export async function GET(request: Request) {
       );
     }
 
+    await saveGoogleAvatar(supabase, user.id, user.user_metadata);
     profileSlug = slug;
   }
 
