@@ -66,9 +66,6 @@ export default async function LoginPage({ searchParams }: LoginProps) {
               <Typography component="h1" sx={s.title}>
                 다시 만나서 반가워요 :)
               </Typography>
-              <Typography sx={s.description}>
-                Google 계정이나 이메일로 로그인하세요.
-              </Typography>
             </Stack>
 
             <AuthForm mode="sign-in" />
