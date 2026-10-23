@@ -7,6 +7,10 @@ const grey = {
   bg: "#F9FAFB",
 };
 
+export const linkTextColor = {
+  feedback: { color: grey.body },
+};
+
 export const styles = {
   footer: { bgcolor: grey.bg, py: { xs: 5, md: 6 } },
   content: {
@@ -18,6 +22,12 @@ export const styles = {
     fontSize: 14,
     fontWeight: 600,
     wordBreak: "keep-all",
+  },
+  feedback: { color: grey.sub, fontSize: 13, wordBreak: "keep-all" },
+  feedbackLink: {
+    textDecoration: "underline",
+    textUnderlineOffset: 2,
+    overflowWrap: "anywhere",
   },
   copyright: { color: grey.sub, fontSize: 13 },
 } satisfies Record<string, SxProps<Theme>>;
