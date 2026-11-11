@@ -240,14 +240,14 @@ export const styles = {
   calendar: {
     height: "100%",
     "& .MuiEventCalendar-headerToolbar": { flexWrap: "wrap", gap: 1 },
-    "& .MuiEventCalendar-headerToolbarSidePanelToggle, & .MuiEventCalendar-sidePanelCollapse, & .MuiEventCalendar-dayTimeGridAllDayEventsGrid":
+    "& .MuiEventCalendar-headerToolbarSidePanelToggle, & .MuiEventCalendar-headerToolbarCompactMenuButton, & .MuiEventCalendar-headerToolbarCompactTodayButton, & .MuiEventCalendar-sidePanelCollapse, & .MuiEventCalendar-dayTimeGridAllDayEventsGrid":
       { display: "none" },
     "& .MuiEventCalendar-headerToolbarActions": {
       alignItems: "center",
       gap: 1,
     },
     "& .MuiEventCalendar-headerToolbarDateNavigator": { gap: 1 },
-    "& .MuiEventCalendar-headerToolbarPreviousButton, & .MuiEventCalendar-headerToolbarNextButton, & .MuiEventCalendar-headerToolbarCompactMenuButton":
+    "& .MuiEventCalendar-headerToolbarPreviousButton, & .MuiEventCalendar-headerToolbarNextButton":
       {
         width: 40,
         height: 40,
@@ -257,33 +257,25 @@ export const styles = {
         color: grey.body,
         "&:hover": { bgcolor: grey.line },
       },
-    "& .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-headerToolbarCompactTodayButton":
-      {
-        height: 40,
-        minHeight: 40,
-        border: 0,
-        bgcolor: grey.fill,
-        color: grey.body,
-        boxShadow: "none",
-        transition: "background-color 160ms ease",
-        "&:hover": { bgcolor: grey.line },
-        "&.Mui-focusVisible": {
-          outline: "2px solid",
-          outlineColor: "primary.main",
-          outlineOffset: 3,
-        },
-      },
     "& .MuiEventCalendar-headerToolbarTodayButton": {
+      height: 40,
+      minHeight: 40,
       minWidth: 64,
       px: 2,
+      border: 0,
       borderRadius: "10px",
+      bgcolor: grey.fill,
+      color: grey.body,
       fontSize: 14,
       fontWeight: 600,
-    },
-    "& .MuiEventCalendar-headerToolbarCompactTodayButton": {
-      width: 40,
-      borderRadius: "10px",
-      "& .MuiSvgIcon-root": { fontSize: 20 },
+      boxShadow: "none",
+      transition: "background-color 160ms ease",
+      "&:hover": { bgcolor: grey.line },
+      "&.Mui-focusVisible": {
+        outline: "2px solid",
+        outlineColor: "primary.main",
+        outlineOffset: 3,
+      },
     },
     "& .MuiEventCalendar-headerToolbarLeftElement > p": {
       fontWeight: 700,
@@ -298,6 +290,16 @@ export const styles = {
       userSelect: "none",
       WebkitUserSelect: "none",
       WebkitTouchCallout: "none",
+    },
+  },
+  // 모바일·태블릿: 헤더 버튼 대신 세로 스와이프로 달을 넘기고, 현재 월과 일정 이름만 보여준다.
+  calendarMobile: {
+    touchAction: "none",
+    "& .MuiEventCalendar-headerToolbarDateNavigator, & .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-viewSwitcher, & .MuiEventCalendar-dayGridEventTime":
+      { display: "none" },
+    // 좁은 화면에서 라이브러리가 숨기는 "N월 YYYY" 라벨을 다시 보여준다.
+    "& .MuiEventCalendar-headerToolbarLeftElement > p[data-expanded-only]": {
+      display: "flex",
     },
   },
 

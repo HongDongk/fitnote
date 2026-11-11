@@ -13,9 +13,11 @@ import {
   Snackbar,
   Stack,
   TextField,
+  useMediaQuery,
 } from "@mui/material";
 import { EventCalendar } from "@mui/x-scheduler/event-calendar";
 import type { SchedulerEvent } from "@mui/x-scheduler/models";
+import type { Locale } from "date-fns";
 import { ko } from "date-fns/locale";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
@@ -37,19 +39,21 @@ const timezone = "Asia/Seoul";
 const timeOptions = Array.from({ length: 49 }, (_, index) => index * 30);
 const subscribe = () => () => {};
 const dragPreviewId = "drag-preview";
-const eventColors: SaveScheduleInput["color"][] = [
-  "blue",
-  "purple",
-  "orange",
-  "pink",
-  "teal",
-  "indigo",
-  "amber",
-];
+// 월간 보기에서 매달 1일에 붙는 "N월" 표시를 없애기 위해 축약 월 이름(MMM)만 비운다.
+const calendarLocale: Locale = {
+  ...ko,
+  localize: {
+    ...ko.localize,
+    month: (month, options) =>
+      options?.width === "abbreviated" ? "" : ko.localize.month(month, options),
+  },
+};
 const timeGridColumnClass = "MuiEventCalendar-dayTimeGridColumn";
 // 터치에서는 스크롤과 구분하기 위해 길게 눌러야 시간 선택이 시작된다.
 const longPressDelay = 400;
 const touchMoveTolerance = 10;
+// 모바일 월간 보기에서 이 거리 이상 세로로 밀면 이전/다음 달로 넘긴다.
+const swipeThreshold = 50;
 
 function getDateParts(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -74,6 +78,12 @@ function getDateTime(date: string, minutes: number) {
   return new Date(
     new Date(`${date}T00:00:00+09:00`).getTime() + minutes * 60_000,
   );
+}
+
+function addMonths(date: Date, amount: number) {
+  const [year, month] = getDateParts(date).date.split("-").map(Number);
+  const firstDay = new Date(Date.UTC(year, month - 1 + amount, 1));
+  return getDateTime(firstDay.toISOString().slice(0, 10), 12 * 60);
 }
 
 function formatTime(minutes: number) {
@@ -153,7 +163,12 @@ export function ScheduleCalendar({
   const suppressClick = useRef(false);
   const touchSelecting = useRef(false);
   const submitting = useRef(false);
-  const currentView = view;
+  // 모바일·태블릿(폭 900px 미만이거나 터치 기기)에서는 헤더 버튼을 숨기고 월간 보기로 고정한다.
+  const isMobile = useMediaQuery("(max-width: 899.95px), (pointer: coarse)", {
+    noSsr: true,
+  });
+  const currentView = isMobile ? "month" : view;
+  const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const canSelect = (canEdit || canRequest) && schedulesQuery.isSuccess;
   const isSaving =
     saveSchedule.isPending ||
@@ -347,8 +362,7 @@ export function ScheduleCalendar({
     const color =
       (events.find((item) => item.id === selection.id)?.color as
         | SaveScheduleInput["color"]
-        | undefined) ??
-      eventColors[Math.floor(Math.random() * eventColors.length)];
+        | undefined) ?? "green";
     submitting.current = true;
     saveSchedule.mutate(
       {
@@ -424,6 +438,23 @@ export function ScheduleCalendar({
             openMemberLogin();
           }
         }}
+        onTouchStart={(event) => {
+          const touch = event.touches[0];
+          swipeStart.current =
+            isMobile && touch ? { x: touch.clientX, y: touch.clientY } : null;
+        }}
+        onTouchEnd={(event) => {
+          const start = swipeStart.current;
+          const touch = event.changedTouches[0];
+          swipeStart.current = null;
+          if (!start || !touch) return;
+          const dx = touch.clientX - start.x;
+          const dy = touch.clientY - start.y;
+          if (Math.abs(dy) < swipeThreshold || Math.abs(dy) < Math.abs(dx))
+            return;
+          // 위로 밀면 다음 달, 아래로 밀면 이전 달
+          setVisibleDate((date) => addMonths(date, dy < 0 ? 1 : -1));
+        }}
         sx={s.calendarBox}
       >
         {isClient && !schedulesQuery.isPending ? (
@@ -467,7 +498,7 @@ export function ScheduleCalendar({
             onViewChange={setView}
             views={["day", "week", "month"]}
             displayTimezone={timezone}
-            dateLocale={ko}
+            dateLocale={calendarLocale}
             defaultPreferences={{
               ampm: false,
               isSidePanelOpen: false,
@@ -551,7 +582,7 @@ export function ScheduleCalendar({
               });
               setError("");
             }}
-            sx={s.calendar}
+            sx={[s.calendar, isMobile && s.calendarMobile]}
           />
         ) : (
           <Skeleton variant="rounded" height="100%" />
