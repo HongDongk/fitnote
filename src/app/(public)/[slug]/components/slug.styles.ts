@@ -78,7 +78,7 @@ const toast = {
 export const styles = {
   // 페이지 (page.tsx)
   page: { minHeight: "100dvh", bgcolor: grey.bg },
-  main: { py: { xs: 3, sm: 6 } },
+  main: { py: { xs: 1.5, sm: 2.5 }},
   errorPage: { py: 6 },
   card: {
     p: { xs: 2.5, sm: 4 },
@@ -277,9 +277,15 @@ export const styles = {
         outlineOffset: 3,
       },
     },
+    // 라이브러리 라벨("12월 2026")은 순서를 바꿀 수 없어 숨기고,
+    // ScheduleCalendar가 넘겨주는 --month-label("2026년 12월")을 대신 보여준다.
     "& .MuiEventCalendar-headerToolbarLeftElement > p": {
+      // 숨긴 원래 글자와 ::after 사이 gap 때문에 라벨이 오른쪽으로 밀리지 않게 한다.
+      gap: 0,
+      fontSize: 0,
       fontWeight: 700,
       color: grey.title,
+      "&::after": { content: "var(--month-label)", fontSize: 20 },
     },
     "& .MuiEventCalendar-timeGridEvent": {
       borderRadius: "8px",
@@ -292,15 +298,41 @@ export const styles = {
       WebkitTouchCallout: "none",
     },
   },
-  // 모바일·태블릿: 헤더 버튼 대신 세로 스와이프로 달을 넘기고, 현재 월과 일정 이름만 보여준다.
+  // 모바일·태블릿: 헤더를 "‹ YYYY년 M월 ›" 알약 모양 버튼 그룹으로 가운데 정렬하고, 일정은 이름만 보여준다.
   calendarMobile: {
-    touchAction: "none",
-    "& .MuiEventCalendar-headerToolbarDateNavigator, & .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-viewSwitcher, & .MuiEventCalendar-dayGridEventTime":
-      { display: "none" },
-    // 좁은 화면에서 라이브러리가 숨기는 "N월 YYYY" 라벨을 다시 보여준다.
+    "& .MuiEventCalendar-headerToolbar": {
+      width: "fit-content",
+      mx: "auto",
+      p: 0.5,
+      gap: 0.5,
+      flexWrap: "nowrap",
+      bgcolor: grey.fill,
+      borderRadius: "999px",
+    },
+    "& .MuiEventCalendar-headerToolbarLeftElement, & .MuiEventCalendar-headerToolbarActions, & .MuiEventCalendar-headerToolbarDateNavigator":
+      { display: "contents" },
+    "& .MuiEventCalendar-headerToolbarPreviousButton, & .MuiEventCalendar-headerToolbarNextButton":
+      {
+        width: 36,
+        height: 36,
+        borderRadius: "50%",
+        bgcolor: "white",
+        color: grey.body,
+        "&:hover": { bgcolor: "white" },
+        "& .MuiSvgIcon-root": { fontSize: 22 },
+      },
+    "& .MuiEventCalendar-headerToolbarPreviousButton": { order: 1 },
+    // 좁은 화면에서 라이브러리가 숨기는 연·월 라벨을 다시 보여준다.
     "& .MuiEventCalendar-headerToolbarLeftElement > p[data-expanded-only]": {
       display: "flex",
+      order: 2,
+      minWidth: 112,
+      justifyContent: "center",
+      "&::after": { fontSize: 16, letterSpacing: "-0.01em" },
     },
+    "& .MuiEventCalendar-headerToolbarNextButton": { order: 3 },
+    "& .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-viewSwitcher, & .MuiEventCalendar-dayGridEventTime":
+      { display: "none" },
   },
 
   // 일정 등록·신청 다이얼로그 (ScheduleCalendar)

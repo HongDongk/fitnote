@@ -80,12 +80,18 @@ export const styles = {
   logoutWrapper: { alignItems: "flex-end" },
   logoutButton: {
     ...smallButton,
-    px: 1.5,
+    minHeight: 30,
+    minWidth: 0,
+    px: 1.25,
+    py: 0.5,
+    borderRadius: "8px",
+    fontSize: 13,
     color: grey.body,
     bgcolor: grey.fill,
     transition: "background-color 160ms ease",
     "&:hover": { bgcolor: grey.line },
-    "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 18 },
+    "& .MuiButton-startIcon": { mr: 0.5 },
+    "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 15 },
   },
 
   // 메뉴 탭

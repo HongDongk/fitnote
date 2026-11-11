@@ -28,7 +28,7 @@ export const visuallyHidden: CSSProperties = {
 export const styles = {
   // 페이지 (page.tsx)
   page: { minHeight: "100dvh", bgcolor: grey.bg },
-  main: { py: { xs: 3, sm: 6 } },
+  main: { py: { xs: 1.5, sm: 2.5 }},
 
   // 카드
   card: {

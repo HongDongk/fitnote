@@ -52,8 +52,6 @@ const timeGridColumnClass = "MuiEventCalendar-dayTimeGridColumn";
 // 터치에서는 스크롤과 구분하기 위해 길게 눌러야 시간 선택이 시작된다.
 const longPressDelay = 400;
 const touchMoveTolerance = 10;
-// 모바일 월간 보기에서 이 거리 이상 세로로 밀면 이전/다음 달로 넘긴다.
-const swipeThreshold = 50;
 
 function getDateParts(date: Date) {
   const parts = new Intl.DateTimeFormat("en-CA", {
@@ -78,12 +76,6 @@ function getDateTime(date: string, minutes: number) {
   return new Date(
     new Date(`${date}T00:00:00+09:00`).getTime() + minutes * 60_000,
   );
-}
-
-function addMonths(date: Date, amount: number) {
-  const [year, month] = getDateParts(date).date.split("-").map(Number);
-  const firstDay = new Date(Date.UTC(year, month - 1 + amount, 1));
-  return getDateTime(firstDay.toISOString().slice(0, 10), 12 * 60);
 }
 
 function formatTime(minutes: number) {
@@ -168,8 +160,9 @@ export function ScheduleCalendar({
     noSsr: true,
   });
   const currentView = isMobile ? "month" : view;
-  const swipeStart = useRef<{ x: number; y: number } | null>(null);
   const canSelect = (canEdit || canRequest) && schedulesQuery.isSuccess;
+  const [visibleYear, visibleMonth] = getDateParts(visibleDate).date.split("-");
+  const monthLabel = `"${visibleYear}년 ${Number(visibleMonth)}월"`;
   const isSaving =
     saveSchedule.isPending ||
     removeSchedule.isPending ||
@@ -438,23 +431,7 @@ export function ScheduleCalendar({
             openMemberLogin();
           }
         }}
-        onTouchStart={(event) => {
-          const touch = event.touches[0];
-          swipeStart.current =
-            isMobile && touch ? { x: touch.clientX, y: touch.clientY } : null;
-        }}
-        onTouchEnd={(event) => {
-          const start = swipeStart.current;
-          const touch = event.changedTouches[0];
-          swipeStart.current = null;
-          if (!start || !touch) return;
-          const dx = touch.clientX - start.x;
-          const dy = touch.clientY - start.y;
-          if (Math.abs(dy) < swipeThreshold || Math.abs(dy) < Math.abs(dx))
-            return;
-          // 위로 밀면 다음 달, 아래로 밀면 이전 달
-          setVisibleDate((date) => addMonths(date, dy < 0 ? 1 : -1));
-        }}
+        style={{ "--month-label": monthLabel } as React.CSSProperties}
         sx={s.calendarBox}
       >
         {isClient && !schedulesQuery.isPending ? (
