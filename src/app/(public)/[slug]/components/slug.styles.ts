@@ -340,8 +340,51 @@ export const styles = {
       "&::after": { fontSize: 16, letterSpacing: "-0.01em" },
     },
     "& .MuiEventCalendar-headerToolbarNextButton": { order: 3 },
-    "& .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-viewSwitcher, & .MuiEventCalendar-dayGridEventTime":
+    "& .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-viewSwitcher, & .MuiEventCalendar-dayGridEventTime, & .MuiEventCalendar-dayGridEvent .MuiEventCalendar-eventColorIndicator":
       { display: "none" },
+    // 좁은 날짜 칸에서 일정 이름이 더 보이도록 색 점 대신 왼쪽 색 막대 + 연한 배경으로 표시한다.
+    "& .MuiEventCalendar-dayGridEvent": {
+      px: "3px",
+      borderLeft: "2px solid var(--event-main)",
+      borderRadius: "3px",
+      bgcolor: "var(--event-surface-subtle)",
+      height: "auto",
+      py: "2px",
+      overflow: "hidden",
+    },
+    "& .MuiEventCalendar-dayGridEventCardWrapper, & .MuiEventCalendar-dayGridEventCardContent":
+      { gap: 0, minWidth: 0, height: "auto" },
+    // 라이브러리는 날짜 칸을 18px 줄 단위로 나누는데, 2줄 일정(28px)은 그 안에 다 안 들어가 서로 겹친다.
+    // 날짜 줄 아래 남은 높이를 일정 영역이 통째로 쓰게 하고, 칸 밖으로는 넘치지 않게 자른다.
+    "& .MuiEventCalendar-monthViewCell": {
+      px: "2px",
+      gridTemplateRows: "auto minmax(0, 1fr)",
+      // 내용(예: "+N개" 버튼)이 넓어도 칸 폭을 넘지 않게 해서 날짜 숫자가 밀려 잘리지 않게 한다.
+      gridTemplateColumns: "minmax(0, 1fr)",
+      overflow: "hidden",
+    },
+    "& .MuiEventCalendar-monthViewMoreEvents": {
+      minWidth: 0,
+      px: "2px",
+      fontSize: 10,
+      lineHeight: "16px",
+    },
+    "& .MuiEventCalendar-monthViewCellEvents": { alignContent: "start" },
+    // 일정 이름은 최대 2줄까지 보여준다.
+    "& .MuiEventCalendar-dayGridEventLinesClamp": {
+      WebkitLineClamp: 2,
+      // 제목(p)과 같은 글자 크기로 맞춰야 줄 높이가 12px로 고르게 잡힌다.
+      fontSize: "var(--EventCalendar-fontSize-eventTitle, 0.75rem)",
+      lineHeight: "12px",
+    },
+    // 라이브러리가 좁은 칸에서 제목 앞뒤에 넣는 여백(@container 규칙)보다 우선하도록 선택자를 한 단계 더 쓴다.
+    "& .MuiEventCalendar-dayGridEventCardWrapper .MuiEventCalendar-dayGridEventTitle": {
+      m: 0,
+      p: 0,
+      lineHeight: "inherit",
+      color: "var(--event-on-surface-subtle-primary)",
+      wordBreak: "break-all",
+    },
   },
 
   // 일정 등록·신청 다이얼로그 (ScheduleCalendar)

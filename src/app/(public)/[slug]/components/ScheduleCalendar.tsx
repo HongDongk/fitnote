@@ -130,6 +130,9 @@ export function ScheduleCalendar({
   const removeSchedule = useDeleteSchedule(instructorId);
   const requestBooking = useRequestBooking(instructorId, accountId);
   const openMemberLogin = useOpenMemberLogin();
+  const isMobile = useMediaQuery("(max-width: 899.95px), (pointer: coarse)", {
+    noSsr: true,
+  });
   const events = useMemo<SchedulerEvent[]>(
     () =>
       (schedulesQuery.data ?? []).map((schedule) => ({
@@ -138,9 +141,9 @@ export function ScheduleCalendar({
         start: schedule.starts_at,
         end: schedule.ends_at,
         color: schedule.color as SaveScheduleInput["color"],
-        readOnly: !canEdit,
+        readOnly: !canEdit || isMobile,
       })),
-    [schedulesQuery.data, canEdit],
+    [schedulesQuery.data, canEdit, isMobile],
   );
   const [visibleDate, setVisibleDate] = useState(() =>
     getDateTime(initialDate, 12 * 60),
@@ -155,10 +158,6 @@ export function ScheduleCalendar({
   const suppressClick = useRef(false);
   const touchSelecting = useRef(false);
   const submitting = useRef(false);
-  // 모바일·태블릿(폭 900px 미만이거나 터치 기기)에서는 헤더 버튼을 숨기고 월간 보기로 고정한다.
-  const isMobile = useMediaQuery("(max-width: 899.95px), (pointer: coarse)", {
-    noSsr: true,
-  });
   const currentView = isMobile ? "month" : view;
   const canSelect = (canEdit || canRequest) && schedulesQuery.isSuccess;
   const [visibleYear, visibleMonth] = getDateParts(visibleDate).date.split("-");
@@ -522,6 +521,7 @@ export function ScheduleCalendar({
               deleteEventButtonAriaLabel: "일정 삭제",
               eventActionsToolbarAriaLabel: "수업 선택 메뉴",
               eventContextMenuAriaLabel: "수업 선택 메뉴",
+              hiddenEvents: (count) => `+${count}개`,
             }}
             onEventEditingStart={(_, details) => {
               details.cancel();
