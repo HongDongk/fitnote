@@ -287,6 +287,14 @@ export const styles = {
       color: grey.title,
       "&::after": { content: "var(--month-label)", fontSize: 20 },
     },
+    // 테마의 MuiButton minHeight(48px)가 "+N개" 버튼에도 적용돼 아래 주 칸까지 덮지 않도록 한 줄 높이로 맞춘다.
+    "& .MuiEventCalendar-monthViewMoreEvents": {
+      minHeight: 0,
+      height: 18,
+      py: 0,
+      lineHeight: "18px",
+      borderRadius: "6px",
+    },
     "& .MuiEventCalendar-timeGridEvent": {
       borderRadius: "8px",
       "--time-grid-event-column-gap": "0px",
@@ -303,6 +311,16 @@ export const styles = {
   calendarBoxMonth: { height: { xs: "auto", sm: "auto" } },
   calendarMonth: {
     height: "auto",
+    // 라이브러리는 날짜 칸을 18px 줄 단위로 나누고 일정 영역을 그중 한 줄(18px)에만 넣어서,
+    // 일정이 여러 개면 서로 겹치거나 "+N개" 버튼이 찌그러진다.
+    // 날짜 줄 아래 남은 높이를 일정 영역이 통째로 쓰게 하고, 칸 밖으로는 넘치지 않게 자른다.
+    "& .MuiEventCalendar-monthViewCell": {
+      gridTemplateRows: "auto minmax(0, 1fr)",
+      // 내용(예: "+N개" 버튼)이 넓어도 칸 폭을 넘지 않게 해서 날짜 숫자가 밀려 잘리지 않게 한다.
+      gridTemplateColumns: "minmax(0, 1fr)",
+      overflow: "hidden",
+    },
+    "& .MuiEventCalendar-monthViewCellEvents": { alignContent: "start" },
     "& .MuiEventCalendar-monthViewBody": {
       gridAutoRows: { xs: "92px", sm: "104px" },
     },
@@ -354,22 +372,13 @@ export const styles = {
     },
     "& .MuiEventCalendar-dayGridEventCardWrapper, & .MuiEventCalendar-dayGridEventCardContent":
       { gap: 0, minWidth: 0, height: "auto" },
-    // 라이브러리는 날짜 칸을 18px 줄 단위로 나누는데, 2줄 일정(28px)은 그 안에 다 안 들어가 서로 겹친다.
-    // 날짜 줄 아래 남은 높이를 일정 영역이 통째로 쓰게 하고, 칸 밖으로는 넘치지 않게 자른다.
-    "& .MuiEventCalendar-monthViewCell": {
-      px: "2px",
-      gridTemplateRows: "auto minmax(0, 1fr)",
-      // 내용(예: "+N개" 버튼)이 넓어도 칸 폭을 넘지 않게 해서 날짜 숫자가 밀려 잘리지 않게 한다.
-      gridTemplateColumns: "minmax(0, 1fr)",
-      overflow: "hidden",
-    },
+    "& .MuiEventCalendar-monthViewCell": { px: "2px" },
     "& .MuiEventCalendar-monthViewMoreEvents": {
       minWidth: 0,
       px: "2px",
       fontSize: 10,
       lineHeight: "16px",
     },
-    "& .MuiEventCalendar-monthViewCellEvents": { alignContent: "start" },
     // 일정 이름은 최대 2줄까지 보여준다.
     "& .MuiEventCalendar-dayGridEventLinesClamp": {
       WebkitLineClamp: 2,

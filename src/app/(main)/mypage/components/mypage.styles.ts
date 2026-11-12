@@ -96,11 +96,7 @@ export const styles = {
     p: 0,
     minWidth: 0,
     borderRadius: "50%",
-    transition: "box-shadow 160ms ease",
-    "&:hover": {
-      bgcolor: "transparent",
-      boxShadow: `0 0 0 6px ${grey.fill}`,
-    },
+    "&:hover": { bgcolor: "transparent" },
     "&.Mui-disabled": { opacity: 0.6 },
   },
   avatar: {
