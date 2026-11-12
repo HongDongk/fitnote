@@ -10,6 +10,7 @@ const grey = {
 export const linkTextColor = {
   feedback: { color: grey.body },
   privacy: { color: grey.body },
+  instagram: { color: grey.body },
 };
 
 export const styles = {
@@ -32,5 +33,15 @@ export const styles = {
   },
   meta: { alignItems: "center" },
   privacyLink: { fontSize: 13, fontWeight: 600 },
+  instagramLink: {
+    display: "inline-flex",
+    alignItems: "center",
+    gap: 0.5,
+    alignSelf: "flex-start",
+    mt: 0.5,
+    fontSize: 13,
+    fontWeight: 600,
+  },
+  instagramIcon: { fontSize: 18 },
   copyright: { color: grey.sub, fontSize: 13 },
 } satisfies Record<string, SxProps<Theme>>;

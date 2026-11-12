@@ -1,8 +1,11 @@
+import InstagramIcon from "@mui/icons-material/Instagram";
 import { Box, Container, Link, Stack, Typography } from "@mui/material";
 
 import { linkTextColor, styles as s } from "./footer.styles";
 
 const FEEDBACK_EMAIL = "feedback@fitnote.online";
+const INSTAGRAM_URL =
+  "https://www.instagram.com/fitnote__official?xtok=MW0ycGNjZnlyczVvOQ%3D%3D&utm_source=qr";
 
 export default function Footer() {
   return (
@@ -27,6 +30,16 @@ export default function Footer() {
                 {FEEDBACK_EMAIL}
               </Link>
             </Typography>
+            <Link
+              href={INSTAGRAM_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              style={linkTextColor.instagram}
+              sx={s.instagramLink}
+            >
+              <InstagramIcon sx={s.instagramIcon} />
+              인스타그램 @fitnote__official
+            </Link>
           </Stack>
           <Stack direction="row" spacing={1.5} sx={s.meta}>
             <Link
