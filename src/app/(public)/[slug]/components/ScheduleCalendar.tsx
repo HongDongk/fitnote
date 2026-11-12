@@ -432,7 +432,10 @@ export function ScheduleCalendar({
           }
         }}
         style={{ "--month-label": monthLabel } as React.CSSProperties}
-        sx={s.calendarBox}
+        sx={[
+          s.calendarBox,
+          isClient && currentView === "month" && s.calendarBoxMonth,
+        ]}
       >
         {isClient && !schedulesQuery.isPending ? (
           <EventCalendar
@@ -559,7 +562,11 @@ export function ScheduleCalendar({
               });
               setError("");
             }}
-            sx={[s.calendar, isMobile && s.calendarMobile]}
+            sx={[
+              s.calendar,
+              currentView === "month" && s.calendarMonth,
+              isMobile && s.calendarMobile,
+            ]}
           />
         ) : (
           <Skeleton variant="rounded" height="100%" />

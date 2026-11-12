@@ -298,6 +298,15 @@ export const styles = {
       WebkitTouchCallout: "none",
     },
   },
+  // 월간 보기: 날짜 칸 높이를 고정하고, 달마다 주 수(4~6주)에 맞춰 달력 높이가 늘었다 줄었다 한다.
+  // calendarBox의 반응형 height를 덮어쓰려면 같은 breakpoint로 지정해야 한다.
+  calendarBoxMonth: { height: { xs: "auto", sm: "auto" } },
+  calendarMonth: {
+    height: "auto",
+    "& .MuiEventCalendar-monthViewBody": {
+      gridAutoRows: { xs: "92px", sm: "104px" },
+    },
+  },
   // 모바일·태블릿: 헤더를 "‹ YYYY년 M월 ›" 알약 모양 버튼 그룹으로 가운데 정렬하고, 일정은 이름만 보여준다.
   calendarMobile: {
     "& .MuiEventCalendar-headerToolbar": {

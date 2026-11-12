@@ -106,6 +106,7 @@ export const styles = {
   avatar: {
     width: 112,
     height: 112,
+    border: `1px solid ${grey.line}`,
     bgcolor: grey.fill,
     color: grey.sub,
   },
