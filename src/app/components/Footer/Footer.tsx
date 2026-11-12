@@ -38,7 +38,7 @@ export default function Footer() {
               sx={s.instagramLink}
             >
               <InstagramIcon sx={s.instagramIcon} />
-              인스타그램 @fitnote__official
+              @fitnote__official
             </Link>
           </Stack>
           <Stack direction="row" spacing={1.5} sx={s.meta}>

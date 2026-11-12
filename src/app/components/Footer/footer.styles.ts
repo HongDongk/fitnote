@@ -42,6 +42,7 @@ export const styles = {
     fontSize: 13,
     fontWeight: 600,
   },
-  instagramIcon: { fontSize: 18 },
+  // 아이콘만 인스타그램 브랜드색으로 표시한다.
+  instagramIcon: { fontSize: 18, color: "#E4405F" },
   copyright: { color: grey.sub, fontSize: 13 },
 } satisfies Record<string, SxProps<Theme>>;
