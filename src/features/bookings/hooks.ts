@@ -10,6 +10,7 @@ import {
   getBookingRequests,
   requestBooking,
   type BookingChangeInput,
+  type BookingRequest,
   type BookingRequestInput,
 } from "./api";
 
@@ -90,6 +91,13 @@ export function useBookingRealtime(
   useEffect(() => {
     if (!instructorId || !accountId || (!isInstructor && !memberId)) return;
     const supabase = createClient();
+    const queryKey = [
+      "bookings",
+      instructorId,
+      accountId,
+      memberId,
+      isInstructor,
+    ];
     const refresh = () => {
       void queryClient.invalidateQueries({
         queryKey: ["bookings", instructorId, accountId],
@@ -111,6 +119,17 @@ export function useBookingRealtime(
           "postgres_changes",
           { event: "*", schema: "public", table: "booking_requests", filter },
           refresh,
+        )
+        .on(
+          "postgres_changes",
+          { event: "DELETE", schema: "public", table: "booking_requests" },
+          ({ old }) => {
+            const requests =
+              queryClient.getQueryData<BookingRequest[]>(queryKey);
+            if (requests?.some((request) => request.id === old.id)) {
+              refresh();
+            }
+          },
         )
         .subscribe((status) => {
           if (status === "SUBSCRIBED") refresh();
