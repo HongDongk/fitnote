@@ -10,15 +10,26 @@ import {
 } from "@mui/material";
 import type { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import { cache } from "react";
 
 import Header from "@/src/app/components/Header/Header";
 import { memberLinkSchema } from "@/src/lib/schemas/memberSchemas";
 import { siteName } from "@/src/lib/site";
-import { createClient } from "@/src/lib/supabase/server";
+import { createClient, getUser } from "@/src/lib/supabase/server";
 import { BookingRequests } from "./components/BookingRequests";
 import { MemberLoginProvider } from "./components/MemberLogin";
 import { ScheduleCalendar } from "./components/ScheduleCalendar";
 import { styles as s } from "./components/slug.styles";
+
+// generateMetadata와 페이지가 같은 강사 프로필 조회 결과를 함께 쓴다.
+const getProfileBySlug = cache(async (slug: string) => {
+  const supabase = await createClient();
+  return supabase
+    .from("profiles")
+    .select("id,display_name,bio,avatar_url")
+    .eq("slug", slug)
+    .maybeSingle();
+});
 
 export async function generateMetadata({
   params,
@@ -29,12 +40,7 @@ export async function generateMetadata({
   const result = memberLinkSchema.safeParse({ instructorSlug: slug });
   if (!result.success) return {};
 
-  const supabase = await createClient();
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("display_name,bio,avatar_url")
-    .eq("slug", result.data.instructorSlug)
-    .maybeSingle();
+  const { data: profile } = await getProfileBySlug(result.data.instructorSlug);
   if (!profile) return {};
 
   const title = `${profile.display_name} 강사님 수업 일정·예약`;
@@ -77,11 +83,9 @@ export default async function InstructorDashboardPage({
   }
 
   const supabase = await createClient();
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("id,display_name,bio,avatar_url")
-    .eq("slug", result.data.instructorSlug)
-    .maybeSingle();
+  const { data: profile, error: profileError } = await getProfileBySlug(
+    result.data.instructorSlug,
+  );
 
   if (profileError) {
     return (
@@ -106,7 +110,7 @@ export default async function InstructorDashboardPage({
   const {
     data: { user },
     error: authError,
-  } = await supabase.auth.getUser();
+  } = await getUser();
   const isInstructor = !authError && user?.id === profile.id;
   const isLoggedIn = !authError && Boolean(user);
   const { memberError } = await searchParams;

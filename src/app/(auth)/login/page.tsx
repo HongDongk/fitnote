@@ -9,6 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
+import NextLink from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/src/lib/supabase/server";
@@ -43,6 +44,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
     <Box component="main" sx={s.page}>
       <Container maxWidth="sm" sx={s.container}>
         <Button
+          component={NextLink}
           href="/"
           startIcon={<ArrowBackRoundedIcon />}
           style={linkTextColor.back}
@@ -73,6 +75,7 @@ export default async function LoginPage({ searchParams }: LoginProps) {
             <Typography sx={s.switchText}>
               아직 회원이 아니신가요?{" "}
               <Link
+                component={NextLink}
                 href="/signup"
                 style={linkTextColor.primary}
                 sx={s.switchLink}

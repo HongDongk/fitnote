@@ -1,5 +1,6 @@
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import NextLink from "next/link";
 
 import { buttonTextColor, styles as s } from "./home.styles";
 
@@ -23,6 +24,7 @@ export default function CtaSection({
             PT, 필라테스, 음악, 댄스까지. 당신의 수업을 위한 작은 시작.
           </Typography>
           <Button
+            component={NextLink}
             href={startHref}
             variant="contained"
             endIcon={<ArrowForwardRoundedIcon />}

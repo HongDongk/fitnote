@@ -1,6 +1,7 @@
 "use client";
 
 import { Button, Stack } from "@mui/material";
+import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 
 import { linkTextColor, styles as s } from "./header.styles";
@@ -25,6 +26,7 @@ export default function HeaderNavigation({
         return (
           <Button
             key={href}
+            component={NextLink}
             href={href}
             aria-current={isActive ? "page" : undefined}
             disableRipple

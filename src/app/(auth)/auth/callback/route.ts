@@ -94,19 +94,12 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { error: authError } = await supabase.auth.exchangeCodeForSession(code);
-
-  if (authError) {
-    return NextResponse.redirect(
-      new URL("/login?error=auth", requestUrl.origin),
-    );
-  }
-
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+    error: authError,
+  } = await supabase.auth.exchangeCodeForSession(code);
 
-  if (!user) {
+  if (authError || !user) {
     return NextResponse.redirect(
       new URL("/login?error=auth", requestUrl.origin),
     );
@@ -124,8 +117,6 @@ export async function GET(request: Request) {
       new URL("/login?error=profile", requestUrl.origin),
     );
   }
-
-  let profileSlug = profile?.slug;
 
   if (!profile) {
     const slug = `teacher-${user.id.replaceAll("-", "").slice(0, 24)}`;
@@ -159,8 +150,9 @@ export async function GET(request: Request) {
     }
 
     await saveOAuthAvatar(supabase, user.id, user.user_metadata);
-    profileSlug = slug;
+    // 새 프로필은 소개글이 비어 있어 강사 페이지가 어차피 /mypage로 보내므로 바로 보낸다.
+    return NextResponse.redirect(new URL("/mypage", requestUrl.origin));
   }
 
-  return NextResponse.redirect(new URL(`/${profileSlug}`, requestUrl.origin));
+  return NextResponse.redirect(new URL(`/${profile.slug}`, requestUrl.origin));
 }

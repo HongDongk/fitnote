@@ -9,6 +9,7 @@ import {
   Typography,
 } from "@mui/material";
 import Image from "next/image";
+import NextLink from "next/link";
 import { redirect } from "next/navigation";
 
 import { createClient } from "@/src/lib/supabase/server";
@@ -37,6 +38,7 @@ export default async function SignupPage() {
     <Box component="main" sx={s.page}>
       <Container maxWidth="sm" sx={s.container}>
         <Button
+          component={NextLink}
           href="/"
           startIcon={<ArrowBackRoundedIcon />}
           style={linkTextColor.back}
@@ -70,6 +72,7 @@ export default async function SignupPage() {
             <Typography sx={s.switchText}>
               이미 회원이신가요?{" "}
               <Link
+                component={NextLink}
                 href="/login"
                 style={linkTextColor.primary}
                 sx={s.switchLink}

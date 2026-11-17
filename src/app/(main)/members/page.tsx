@@ -2,7 +2,7 @@ import { Box, Container } from "@mui/material";
 import { redirect } from "next/navigation";
 
 import Header from "@/src/app/components/Header/Header";
-import { createClient } from "@/src/lib/supabase/server";
+import { createClient, getUser } from "@/src/lib/supabase/server";
 import { MemberManagement } from "./components/MemberManagement";
 import { styles as s } from "./components/members.styles";
 
@@ -10,7 +10,7 @@ export default async function MembersPage() {
   const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getUser();
 
   if (!user) {
     redirect("/");

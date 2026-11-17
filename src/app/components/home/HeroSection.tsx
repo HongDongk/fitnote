@@ -1,6 +1,7 @@
 import ArrowForwardRoundedIcon from "@mui/icons-material/ArrowForwardRounded";
 import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
+import NextLink from "next/link";
 
 import { buttonTextColor, styles as s } from "./home.styles";
 import ProductPreview from "./ProductPreview";
@@ -35,6 +36,7 @@ export default function HeroSection({
           sx={s.heroActions}
         >
           <Button
+            component={NextLink}
             href={startHref}
             variant="contained"
             color="primary"

@@ -1,10 +1,11 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import Image from "next/image";
+import NextLink from "next/link";
 
 import HeaderNavigation from "@/src/app/components/Header/HeaderNavigation";
 import { LogoutButton } from "@/src/app/components/Header/LogoutButton";
 import { getMetadataDisplayName } from "@/src/features/auth/displayName";
-import { createClient } from "@/src/lib/supabase/server";
+import { createClient, getUser } from "@/src/lib/supabase/server";
 
 import { linkTextColor, styles as s } from "./header.styles";
 
@@ -22,7 +23,7 @@ export default async function Header({
   const supabase = await createClient();
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getUser();
   const { data: profile } = user
     ? await supabase
         .from("profiles")
@@ -57,7 +58,7 @@ export default async function Header({
       <Container maxWidth="lg">
         <Stack direction="row" sx={s.bar}>
           <Stack
-            component="a"
+            component={NextLink}
             href="/"
             direction="row"
             spacing={0.75}
@@ -87,6 +88,7 @@ export default async function Header({
             </Stack>
           ) : showLogin ? (
             <Button
+              component={NextLink}
               href="/login"
               variant="contained"
               size="small"

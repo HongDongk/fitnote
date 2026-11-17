@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 import { siteDescription, siteName, siteUrl, toJsonLd } from "@/src/lib/site";
-import { createClient } from "@/src/lib/supabase/server";
+import { createClient, getUser } from "@/src/lib/supabase/server";
 import { Box } from "@mui/material";
 import Footer from "./components/Footer/Footer";
 import Header from "./components/Header/Header";
@@ -49,7 +49,7 @@ export default async function HomePage() {
   const {
     data: { user },
     error,
-  } = await supabase.auth.getUser();
+  } = await getUser();
   const isLoggedIn = !error && Boolean(user);
   const { data: profile } =
     isLoggedIn && user
