@@ -1,6 +1,7 @@
 "use client";
 
 import DeleteRoundedIcon from "@mui/icons-material/DeleteRounded";
+import EditRoundedIcon from "@mui/icons-material/EditRounded";
 import PeopleOutlineRoundedIcon from "@mui/icons-material/PeopleOutlineRounded";
 import {
   Alert,
@@ -21,7 +22,10 @@ import { useRef, useState, type SubmitEvent } from "react";
 import { MessageDialog } from "@/src/app/components/Dialog/MessageDialog";
 import type { MemberSummary } from "@/src/features/members/api";
 import { ApiError } from "@/src/lib/api/error";
-import { memberCreateSchema } from "@/src/lib/schemas/memberSchemas";
+import {
+  memberCreateSchema,
+  memberUpdateSchema,
+} from "@/src/lib/schemas/memberSchemas";
 
 import {
   getMemberManagementErrorMessage,
@@ -31,6 +35,7 @@ import {
   useCreateMember,
   useDeleteMember,
   useInstructorMembers,
+  useUpdateMember,
 } from "@/src/features/members/hooks";
 
 import { styles as s } from "./members.styles";
@@ -43,6 +48,7 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
   const members = useInstructorMembers(instructorId);
   const createMember = useCreateMember(instructorId);
   const deleteMember = useDeleteMember(instructorId);
+  const updateMember = useUpdateMember(instructorId);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -53,6 +59,48 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
     null,
   );
   const isDeleting = useRef(false);
+  const [memberToEdit, setMemberToEdit] = useState<MemberSummary | null>(null);
+  const [editName, setEditName] = useState("");
+  const [editNameError, setEditNameError] = useState("");
+
+  function openEdit(member: MemberSummary) {
+    setNotification("");
+    setEditName(member.name);
+    setEditNameError("");
+    setMemberToEdit(member);
+  }
+
+  async function handleRename() {
+    if (!memberToEdit || updateMember.isPending) {
+      return;
+    }
+    const result = memberUpdateSchema.safeParse({
+      memberId: memberToEdit.id,
+      name: editName,
+    });
+    if (!result.success) {
+      setEditNameError(
+        getMemberValidationError(result.error).fieldErrors?.name ?? "",
+      );
+      return;
+    }
+    if (result.data.name === memberToEdit.name) {
+      setMemberToEdit(null);
+      return;
+    }
+    try {
+      await updateMember.mutateAsync(result.data);
+      setNotification("회원 이름이 변경되었습니다.");
+      setMemberToEdit(null);
+    } catch (error) {
+      if (error instanceof ApiError && error.fieldErrors.name) {
+        setEditNameError(error.fieldErrors.name);
+      } else {
+        setMemberToEdit(null);
+        setMessage(getMemberManagementErrorMessage(error));
+      }
+    }
+  }
 
   async function handleDelete() {
     if (!memberToDelete || isDeleting.current) {
@@ -237,27 +285,34 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
                         spacing={0.5}
                         sx={s.memberActions}
                       >
-                        <Chip
-                          label={member.auth_user_id ? "연결됨" : "인증 대기"}
-                          size="small"
-                          sx={[
-                            s.statusBadge,
-                            member.auth_user_id
-                              ? s.statusConnected
-                              : s.statusPending,
-                          ]}
-                        />
-                        <IconButton
-                          aria-label={`${member.name} 회원 삭제`}
-                          disabled={deleteMember.isPending}
-                          onClick={() => {
-                            setNotification("");
-                            setMemberToDelete(member);
-                          }}
-                          sx={s.deleteButton}
-                        >
-                          <DeleteRoundedIcon />
-                        </IconButton>
+                        {!member.auth_user_id && (
+                          <Chip
+                            label="인증 대기"
+                            size="small"
+                            sx={[s.statusBadge, s.statusPending]}
+                          />
+                        )}
+                        <Stack direction="row" sx={s.iconActions}>
+                          <IconButton
+                            aria-label={`${member.name} 회원 이름 수정`}
+                            disabled={updateMember.isPending}
+                            onClick={() => openEdit(member)}
+                            sx={s.iconButton}
+                          >
+                            <EditRoundedIcon />
+                          </IconButton>
+                          <IconButton
+                            aria-label={`${member.name} 회원 삭제`}
+                            disabled={deleteMember.isPending}
+                            onClick={() => {
+                              setNotification("");
+                              setMemberToDelete(member);
+                            }}
+                            sx={s.iconButton}
+                          >
+                            <DeleteRoundedIcon />
+                          </IconButton>
+                        </Stack>
                       </Stack>
                     </Stack>
                   </Box>
@@ -285,6 +340,38 @@ export function MemberManagement({ instructorId }: MemberManagementProps) {
         message={message}
         onClose={() => setMessage("")}
       />
+      <MessageDialog
+        open={Boolean(memberToEdit)}
+        title="회원 이름 수정"
+        message={`${memberToEdit?.email ?? ""} 회원의 이름을 변경합니다.`}
+        confirmText={updateMember.isPending ? "저장 중…" : "저장"}
+        isPending={updateMember.isPending}
+        onConfirm={() => void handleRename()}
+        onClose={() => setMemberToEdit(null)}
+      >
+        <TextField
+          label="이름"
+          required
+          fullWidth
+          autoComplete="off"
+          value={editName}
+          disabled={updateMember.isPending}
+          error={Boolean(editNameError)}
+          helperText={editNameError || " "}
+          slotProps={{ htmlInput: { maxLength: 50 } }}
+          onChange={(event) => {
+            setEditName(event.target.value);
+            setEditNameError("");
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Enter" && !event.nativeEvent.isComposing) {
+              event.preventDefault();
+              void handleRename();
+            }
+          }}
+          sx={s.editNameField}
+        />
+      </MessageDialog>
       <MessageDialog
         open={Boolean(memberToDelete)}
         title="회원을 삭제할까요?"

@@ -8,6 +8,7 @@ import {
   memberLoginSchema,
   memberCreateSchema,
   memberDeleteSchema,
+  memberUpdateSchema,
 } from "@/src/lib/schemas/memberSchemas";
 import { createClient } from "@/src/lib/supabase/client";
 import type { Tables } from "@/src/lib/supabase/database.types";
@@ -20,6 +21,8 @@ import {
   getMemberDeleteRequestError,
   getMemberReadError,
   getMemberRequestError,
+  getMemberUpdateDatabaseError,
+  getMemberUpdateRequestError,
   getMemberValidationError,
   memberMessages,
 } from "./errors";
@@ -133,6 +136,40 @@ export async function deleteMember(instructorId: string, memberId: string) {
     return data.id;
   } catch (error) {
     throw getMemberDeleteRequestError(error);
+  }
+}
+
+export async function updateMemberName(
+  instructorId: string,
+  memberId: string,
+  name: string,
+): Promise<MemberSummary> {
+  const result = memberUpdateSchema.safeParse({ memberId, name });
+  if (!result.success) {
+    throw getMemberValidationError(result.error);
+  }
+
+  try {
+    const supabase = createClient();
+    await verifyInstructor(supabase, instructorId);
+
+    const { data, error } = await supabase
+      .from("members")
+      .update({ name: result.data.name })
+      .eq("id", result.data.memberId)
+      .eq("instructor_id", instructorId)
+      .select("id,name,email,auth_user_id,created_at")
+      .maybeSingle();
+
+    if (error) {
+      throw getMemberUpdateDatabaseError(error);
+    }
+    if (!data) {
+      throw new ApiError(memberMessages.memberNotFound, 404);
+    }
+    return data;
+  } catch (error) {
+    throw getMemberUpdateRequestError(error);
   }
 }
 

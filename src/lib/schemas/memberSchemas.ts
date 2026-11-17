@@ -30,6 +30,11 @@ export const memberCreateSchema = z.object({
   ),
 });
 
+export const memberUpdateSchema = z.object({
+  memberId: z.uuid({ error: "수정할 회원 정보를 확인해주세요." }),
+  name: memberCreateSchema.shape.name,
+});
+
 export const memberCallbackSchema = memberLinkSchema
   .extend({
     code: z.string().min(1, "인증 코드를 확인해주세요.").optional(),

@@ -19,6 +19,18 @@ const card = {
   borderRadius: "24px",
 } satisfies SxProps<Theme>;
 
+// 회원 등록 폼과 이름 수정 창이 같은 입력창 모양을 쓴다.
+const textField = {
+  "& .MuiOutlinedInput-root": {
+    minHeight: 56,
+    borderRadius: "14px",
+    "& .MuiOutlinedInput-notchedOutline": { borderColor: grey.line },
+    "&:hover:not(.Mui-focused):not(.Mui-error) .MuiOutlinedInput-notchedOutline":
+      { borderColor: grey.lineHover },
+  },
+  "& .MuiFormHelperText-root": { mx: 0.5, fontSize: 13 },
+} satisfies SxProps<Theme>;
+
 const badge = {
   height: 24,
   borderRadius: "6px",
@@ -74,16 +86,7 @@ export const styles = {
   },
 
   // 회원 등록 폼
-  form: {
-    "& .MuiOutlinedInput-root": {
-      minHeight: 56,
-      borderRadius: "14px",
-      "& .MuiOutlinedInput-notchedOutline": { borderColor: grey.line },
-      "&:hover:not(.Mui-focused):not(.Mui-error) .MuiOutlinedInput-notchedOutline":
-        { borderColor: grey.lineHover },
-    },
-    "& .MuiFormHelperText-root": { mx: 0.5, fontSize: 13 },
-  },
+  form: textField,
   submitButton: {
     minHeight: 52,
     borderRadius: "14px",
@@ -132,14 +135,15 @@ export const styles = {
   },
   memberActions: { alignItems: "center", flexShrink: 0 },
   statusBadge: badge,
-  statusConnected: { bgcolor: "primary.light", color: "primary.main" },
   statusPending: { bgcolor: grey.fill, color: grey.body },
-  deleteButton: {
+  iconActions: { alignItems: "center" },
+  iconButton: {
     width: 44,
     height: 44,
     color: grey.sub,
     "&:hover": { bgcolor: grey.fill },
   },
+  editNameField: { ...textField, mt: 3 },
 
   // 빈 상태
   empty: { alignItems: "center", py: 6, textAlign: "center" },

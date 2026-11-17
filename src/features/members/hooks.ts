@@ -10,6 +10,7 @@ import {
   linkMemberAccount,
   requestMemberLogin,
   requestMemberOAuthLogin,
+  updateMemberName,
   type CreateMemberInput,
   type MemberSummary,
 } from "./api";
@@ -52,6 +53,24 @@ export function useDeleteMember(instructorId: string) {
         }),
         queryClient.invalidateQueries({ queryKey: ["members", "mine"] }),
       ]);
+    },
+  });
+}
+
+export function useUpdateMember(instructorId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ memberId, name }: { memberId: string; name: string }) =>
+      updateMemberName(instructorId, memberId, name),
+    retry: false,
+    onSuccess: (updated) => {
+      queryClient.setQueryData<MemberSummary[]>(
+        ["members", "instructor", instructorId],
+        (previous) =>
+          previous?.map((member) =>
+            member.id === updated.id ? updated : member,
+          ),
+      );
     },
   });
 }

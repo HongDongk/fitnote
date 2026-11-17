@@ -8,7 +8,7 @@ import {
   DialogContentText,
   DialogTitle,
 } from "@mui/material";
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 
 import { styles as s } from "./messageDialog.styles";
 
@@ -21,6 +21,7 @@ type MessageDialogProps = {
   onConfirm?: () => void;
   isPending?: boolean;
   confirmColor?: "primary" | "error";
+  children?: ReactNode;
 };
 
 export function MessageDialog({
@@ -32,6 +33,7 @@ export function MessageDialog({
   onConfirm,
   isPending = false,
   confirmColor = "primary",
+  children,
 }: MessageDialogProps) {
   const id = useId();
   const titleId = `${id}-title`;
@@ -57,6 +59,7 @@ export function MessageDialog({
         <DialogContentText id={descriptionId} sx={s.message}>
           {message}
         </DialogContentText>
+        {children}
       </DialogContent>
       <DialogActions disableSpacing sx={s.actions}>
         {onConfirm && (
