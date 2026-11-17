@@ -217,6 +217,7 @@ export default async function InstructorDashboardPage({
                   canEdit={isInstructor}
                   canRequest={Boolean(member)}
                   accountId={accountId}
+                  memberId={member?.id ?? null}
                 />
                 {!isInstructor && member && (
                   <BookingRequests

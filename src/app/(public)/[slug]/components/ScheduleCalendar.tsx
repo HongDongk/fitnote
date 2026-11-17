@@ -22,7 +22,10 @@ import { ko } from "date-fns/locale";
 import { useMemo, useRef, useState, useSyncExternalStore } from "react";
 
 import { getBookingErrorMessage } from "@/src/features/bookings/errors";
-import { useRequestBooking } from "@/src/features/bookings/hooks";
+import {
+  useBookingRequests,
+  useRequestBooking,
+} from "@/src/features/bookings/hooks";
 import type { SaveScheduleInput } from "@/src/features/schedules/api";
 import { getScheduleErrorMessage } from "@/src/features/schedules/errors";
 import {
@@ -112,12 +115,14 @@ export function ScheduleCalendar({
   canEdit,
   canRequest = false,
   accountId = null,
+  memberId = null,
 }: {
   today: string;
   instructorId: string;
   canEdit: boolean;
   canRequest?: boolean;
   accountId?: string | null;
+  memberId?: string | null;
 }) {
   const isClient = useSyncExternalStore(
     subscribe,
@@ -128,6 +133,24 @@ export function ScheduleCalendar({
   const schedulesQuery = useInstructorSchedules(instructorId);
   useScheduleRealtime(instructorId);
   const memberNamesQuery = useScheduleMemberNames(instructorId, canEdit);
+  const isMemberView = !canEdit && Boolean(memberId);
+  const myBookingsQuery = useBookingRequests(
+    instructorId,
+    accountId,
+    isMemberView ? memberId : null,
+    false,
+  );
+  const tagLabels = useMemo<Record<string, string> | undefined>(() => {
+    if (canEdit) return memberNamesQuery.data;
+    if (!isMemberView) return undefined;
+    return Object.fromEntries(
+      (myBookingsQuery.data ?? []).flatMap(({ status, schedule_id }) =>
+        status === "approved" && schedule_id
+          ? [[schedule_id, "내 일정"]]
+          : [],
+      ),
+    );
+  }, [canEdit, isMemberView, memberNamesQuery.data, myBookingsQuery.data]);
   const saveSchedule = useSaveSchedule(instructorId);
   const removeSchedule = useDeleteSchedule(instructorId);
   const requestBooking = useRequestBooking(instructorId, accountId);
@@ -138,20 +161,24 @@ export function ScheduleCalendar({
   const events = useMemo<SchedulerEvent[]>(
     () =>
       (schedulesQuery.data ?? []).map((schedule) => {
-        const memberName = memberNamesQuery.data?.[schedule.id];
+        const tagLabel = tagLabels?.[schedule.id];
         return {
           id: schedule.id,
           title: schedule.title,
-          className: memberName
+          className: tagLabel
             ? `fn-member fn-member-${schedule.id}`
             : undefined,
           start: schedule.starts_at,
           end: schedule.ends_at,
-          color: schedule.color as SaveScheduleInput["color"],
+          color: isMemberView
+            ? tagLabel
+              ? "green"
+              : "grey"
+            : (schedule.color as SaveScheduleInput["color"]),
           readOnly: !canEdit || isMobile,
         };
       }),
-    [schedulesQuery.data, memberNamesQuery.data, canEdit, isMobile],
+    [schedulesQuery.data, tagLabels, isMemberView, canEdit, isMobile],
   );
   const [visibleDate, setVisibleDate] = useState(() =>
     getDateTime(initialDate, 12 * 60),
@@ -579,7 +606,7 @@ export function ScheduleCalendar({
               s.calendar,
               currentView === "month" && s.calendarMonth,
               isMobile && s.calendarMobile,
-              memberTagStyles(memberNamesQuery.data),
+              memberTagStyles(tagLabels),
             ]}
           />
         ) : (
