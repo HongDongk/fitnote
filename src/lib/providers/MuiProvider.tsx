@@ -2,6 +2,7 @@
 
 import { createTheme, CssBaseline, ThemeProvider } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v16-appRouter";
+import NextLink from "next/link";
 
 const theme = createTheme({
   palette: {
@@ -40,6 +41,16 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiButtonBase: {
+      defaultProps: {
+        LinkComponent: NextLink,
+      },
+    },
+    MuiLink: {
+      defaultProps: {
+        component: NextLink,
+      },
+    },
     MuiModal: {
       defaultProps: {
         disableScrollLock: true,

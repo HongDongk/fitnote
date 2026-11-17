@@ -93,7 +93,7 @@ export default async function InstructorDashboardPage({
         <Alert
           severity="error"
           action={
-            <Button href={`/${slug}`} color="inherit">
+            <Button component="a" href={`/${slug}`} color="inherit">
               재시도
             </Button>
           }
@@ -154,7 +154,7 @@ export default async function InstructorDashboardPage({
                 <Alert
                   severity="error"
                   action={
-                    <Button href={`/${slug}`} color="inherit">
+                    <Button component="a" href={`/${slug}`} color="inherit">
                       재시도
                     </Button>
                   }

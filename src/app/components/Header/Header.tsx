@@ -1,6 +1,5 @@
 import { Box, Button, Container, Stack, Typography } from "@mui/material";
 import Image from "next/image";
-import NextLink from "next/link";
 
 import HeaderNavigation from "@/src/app/components/Header/HeaderNavigation";
 import { LogoutButton } from "@/src/app/components/Header/LogoutButton";
@@ -58,7 +57,7 @@ export default async function Header({
       <Container maxWidth="lg">
         <Stack direction="row" sx={s.bar}>
           <Stack
-            component={NextLink}
+            component="a"
             href="/"
             direction="row"
             spacing={0.75}
@@ -88,7 +87,6 @@ export default async function Header({
             </Stack>
           ) : showLogin ? (
             <Button
-              component={NextLink}
               href="/login"
               variant="contained"
               size="small"

@@ -1,6 +1,5 @@
 import InstagramIcon from "@mui/icons-material/Instagram";
 import { Box, Container, Link, Stack, Typography } from "@mui/material";
-import NextLink from "next/link";
 
 import { linkTextColor, styles as s } from "./footer.styles";
 
@@ -44,7 +43,6 @@ export default function Footer() {
           </Stack>
           <Stack direction="row" spacing={1.5} sx={s.meta}>
             <Link
-              component={NextLink}
               href="/privacy"
               style={linkTextColor.privacy}
               sx={s.privacyLink}
