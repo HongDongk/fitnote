@@ -29,11 +29,12 @@ import {
   useDeleteSchedule,
   useInstructorSchedules,
   useSaveSchedule,
+  useScheduleMemberNames,
   useScheduleRealtime,
 } from "@/src/features/schedules/hooks";
 
 import { useOpenMemberLogin } from "./MemberLogin";
-import { styles as s } from "./slug.styles";
+import { memberTagStyles, styles as s } from "./slug.styles";
 
 const timezone = "Asia/Seoul";
 const timeOptions = Array.from({ length: 49 }, (_, index) => index * 30);
@@ -126,6 +127,7 @@ export function ScheduleCalendar({
   const initialDate = getDateParts(new Date(today)).date;
   const schedulesQuery = useInstructorSchedules(instructorId);
   useScheduleRealtime(instructorId);
+  const memberNamesQuery = useScheduleMemberNames(instructorId, canEdit);
   const saveSchedule = useSaveSchedule(instructorId);
   const removeSchedule = useDeleteSchedule(instructorId);
   const requestBooking = useRequestBooking(instructorId, accountId);
@@ -135,15 +137,21 @@ export function ScheduleCalendar({
   });
   const events = useMemo<SchedulerEvent[]>(
     () =>
-      (schedulesQuery.data ?? []).map((schedule) => ({
-        id: schedule.id,
-        title: schedule.title,
-        start: schedule.starts_at,
-        end: schedule.ends_at,
-        color: schedule.color as SaveScheduleInput["color"],
-        readOnly: !canEdit || isMobile,
-      })),
-    [schedulesQuery.data, canEdit, isMobile],
+      (schedulesQuery.data ?? []).map((schedule) => {
+        const memberName = memberNamesQuery.data?.[schedule.id];
+        return {
+          id: schedule.id,
+          title: schedule.title,
+          className: memberName
+            ? `fn-member fn-member-${schedule.id}`
+            : undefined,
+          start: schedule.starts_at,
+          end: schedule.ends_at,
+          color: schedule.color as SaveScheduleInput["color"],
+          readOnly: !canEdit || isMobile,
+        };
+      }),
+    [schedulesQuery.data, memberNamesQuery.data, canEdit, isMobile],
   );
   const [visibleDate, setVisibleDate] = useState(() =>
     getDateTime(initialDate, 12 * 60),
@@ -558,7 +566,12 @@ export function ScheduleCalendar({
                         ),
                         1440,
                       ),
-                title: details.reason === "creation" ? "" : occurrence.title,
+                title:
+                  details.reason === "creation"
+                    ? ""
+                    : (schedulesQuery.data?.find(
+                        (schedule) => schedule.id === occurrence.id,
+                      )?.title ?? occurrence.title),
               });
               setError("");
             }}
@@ -566,6 +579,7 @@ export function ScheduleCalendar({
               s.calendar,
               currentView === "month" && s.calendarMonth,
               isMobile && s.calendarMobile,
+              memberTagStyles(memberNamesQuery.data),
             ]}
           />
         ) : (

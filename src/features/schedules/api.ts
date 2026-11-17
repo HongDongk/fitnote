@@ -78,6 +78,32 @@ export async function getInstructorSchedules(
   }
 }
 
+// 승인된 신청으로 만들어진 일정의 회원 이름. 강사만 신청 내역을 읽을 수 있어 강사 화면에서만 부른다.
+export async function getScheduleMemberNames(
+  instructorId: string,
+): Promise<Record<string, string>> {
+  try {
+    const { data, error } = await createClient()
+      .from("booking_requests")
+      .select(
+        "schedule_id,member:members!booking_requests_member_id_instructor_id_fkey(name)",
+      )
+      .eq("instructor_id", instructorId)
+      .eq("status", "approved");
+
+    if (error) {
+      throw getScheduleDatabaseError(error, scheduleMessages.readFailed);
+    }
+    return Object.fromEntries(
+      (data ?? []).flatMap(({ schedule_id, member }) =>
+        schedule_id && member ? [[schedule_id, member.name]] : [],
+      ),
+    );
+  } catch (error) {
+    throw getScheduleRequestError(error, scheduleMessages.readFailed);
+  }
+}
+
 export async function createSchedule(
   instructorId: string,
   values: SaveScheduleInput,

@@ -38,6 +38,21 @@ const badge = {
   "& .MuiChip-label": { px: 1 },
 } satisfies SxProps<Theme>;
 
+// 강사 시간표에서 일정 위에 붙는 회원 이름 태그
+const memberTag = {
+  maxWidth: "100%",
+  px: "4px",
+  borderRadius: "4px",
+  bgcolor: "primary.main",
+  color: "white",
+  fontSize: 10,
+  fontWeight: 700,
+  lineHeight: "14px",
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+} satisfies SxProps<Theme>;
+
 const outlinedInput = {
   "& .MuiOutlinedInput-root": {
     minHeight: 56,
@@ -299,6 +314,29 @@ export const styles = {
       borderRadius: "8px",
       "--time-grid-event-column-gap": "0px",
     },
+    // 회원 신청으로 잡힌 일정: 회원 이름 태그를 위에, 일정 제목을 그 아래 줄에 보여준다.
+    // 시간은 달력 칸에서 알 수 있어 숨기고, 그 자리를 제목이 쓴다. 태그 글자는 memberTagStyles가 넣는다.
+    "& .fn-member": {
+      "& .MuiEventCalendar-timeGridEventTime, & .MuiEventCalendar-dayGridEventTime":
+        { display: "none" },
+      "& .MuiEventCalendar-timeGridEventTitle": {
+        display: "block",
+        WebkitLineClamp: "unset",
+      },
+      "& .MuiEventCalendar-timeGridEventTitle::before": {
+        ...memberTag,
+        display: "table",
+        mb: "4px",
+      },
+      // 데스크톱 월간 보기는 일정 칸이 한 줄 높이로 고정돼 있어 태그와 제목을 한 줄에 둔다.
+      "& .MuiEventCalendar-dayGridEventTitle::before": {
+        ...memberTag,
+        display: "inline-block",
+        mr: "6px",
+        verticalAlign: "top",
+        mt: "3px",
+      },
+    },
     // ScheduleCalendar의 timeGridColumnClass와 같은 클래스
     "& .MuiEventCalendar-dayTimeGridColumn": {
       userSelect: "none",
@@ -379,6 +417,10 @@ export const styles = {
       fontSize: 10,
       lineHeight: "16px",
     },
+    // 칸이 좁아 회원 이름 태그는 빼고 일정 이름만 보여준다.
+    "& .fn-member .MuiEventCalendar-dayGridEventTitle::before": {
+      display: "none",
+    },
     // 일정 이름은 최대 2줄까지 보여준다.
     "& .MuiEventCalendar-dayGridEventLinesClamp": {
       WebkitLineClamp: 2,
@@ -419,3 +461,17 @@ export const styles = {
     color: "error.main",
   },
 } satisfies Record<string, SxProps<Theme>>;
+
+// 일정마다 다른 회원 이름을 CSS content로 넣는다. 이름 속 따옴표·역슬래시·줄바꿈은 CSS 이스케이프한다.
+export function memberTagStyles(
+  memberNames: Record<string, string> | undefined,
+): Record<string, { content: string }> {
+  return Object.fromEntries(
+    Object.entries(memberNames ?? {}).map(([scheduleId, name]) => [
+      `& .fn-member-${scheduleId} .MuiEventCalendar-timeGridEventTitle::before, & .fn-member-${scheduleId} .MuiEventCalendar-dayGridEventTitle::before`,
+      {
+        content: `"${name.replace(/["\\\n\r]/g, (char) => `\\${char.charCodeAt(0).toString(16)} `)}"`,
+      },
+    ]),
+  );
+}

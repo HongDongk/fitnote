@@ -8,6 +8,7 @@ import {
   createSchedule,
   deleteSchedule,
   getInstructorSchedules,
+  getScheduleMemberNames,
   updateSchedule,
   type SaveScheduleInput,
   type ScheduleSummary,
@@ -22,6 +23,15 @@ export function useInstructorSchedules(instructorId: string) {
     queryKey: scheduleQueryKey(instructorId),
     queryFn: () => getInstructorSchedules(instructorId),
     enabled: Boolean(instructorId),
+  });
+}
+
+export function useScheduleMemberNames(instructorId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: [...scheduleQueryKey(instructorId), "memberNames"],
+    queryFn: () => getScheduleMemberNames(instructorId),
+    enabled: Boolean(instructorId) && enabled,
+    retry: false,
   });
 }
 
