@@ -312,7 +312,10 @@ export const styles = {
     },
     "& .MuiEventCalendar-timeGridEvent": {
       borderRadius: "8px",
-      "--time-grid-event-column-gap": "0px",
+      // 왼쪽은 칸에 붙이고, 오른쪽만 띄워 옆 칸·옆 일정과 구분한다.
+      "--time-grid-event-column-gap": "7px",
+      // 라이브러리가 일정 왼쪽에 그리는 색 막대를 없앤다.
+      "&::before": { display: "none" },
     },
     // 회원 신청으로 잡힌 일정: 회원 이름 태그를 위에, 일정 제목을 그 아래 줄에 보여준다.
     // 시간은 달력 칸에서 알 수 있어 숨기고, 그 자리를 제목이 쓴다. 태그 글자는 memberTagStyles가 넣는다.
@@ -398,10 +401,9 @@ export const styles = {
     "& .MuiEventCalendar-headerToolbarNextButton": { order: 3 },
     "& .MuiEventCalendar-headerToolbarTodayButton, & .MuiEventCalendar-viewSwitcher, & .MuiEventCalendar-dayGridEventTime, & .MuiEventCalendar-dayGridEvent .MuiEventCalendar-eventColorIndicator":
       { display: "none" },
-    // 좁은 날짜 칸에서 일정 이름이 더 보이도록 색 점 대신 왼쪽 색 막대 + 연한 배경으로 표시한다.
+    // 좁은 날짜 칸에서 일정 이름이 더 보이도록 색 점 대신 연한 배경으로 표시한다.
     "& .MuiEventCalendar-dayGridEvent": {
       px: "3px",
-      borderLeft: "2px solid var(--event-main)",
       borderRadius: "3px",
       bgcolor: "var(--event-surface-subtle)",
       height: "auto",
